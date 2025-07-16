@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Aegis.Cli.Utilities;
 
 internal static class LogsHelper

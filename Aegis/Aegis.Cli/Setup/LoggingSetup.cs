@@ -1,9 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
+using Aegis.Cli.Services.Logging;
 using Aegis.Cli.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Parsing;
 
 namespace Aegis.Cli.Setup;
 
@@ -13,26 +16,47 @@ internal static class LoggingSetup
     {
         Log.Logger = new LoggerConfiguration()
                      .MinimumLevel.Debug()
-                     .Enrich.With<SourceContextShortenedEnricher>()
-                     .WriteTo.Console(
-                         outputTemplate: "{Timestamp:HH:mm:ss} {Message:lj}{NewLine}",
-                         standardErrorFromLevel: LogEventLevel.Error,
+                     .WriteTo.Logger(logger => logger.WriteTo.Console(
+                                         outputTemplate: "{Message:lj}{NewLine}",
+                                         standardErrorFromLevel: LogEventLevel.Error,
 #if DEBUG
-                         restrictedToMinimumLevel: LogEventLevel.Debug
+                                         restrictedToMinimumLevel: LogEventLevel.Debug
 #else
                          restrictedToMinimumLevel: LogEventLevel.Information
 #endif
+                                     )
                      )
-                     .WriteTo.File(
-                         outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
-                         path: LogsHelper.GetLogFilePath(),
-                         rollingInterval: RollingInterval.Infinite,
-                         fileSizeLimitBytes: 8 * 1024 * 1024,
-                         buffered: false,
-                         rollOnFileSizeLimit: true,
-                         flushToDiskInterval: TimeSpan.FromSeconds(3)
+                     .WriteTo.Logger(logger => logger
+                                               .WriteTo.Console(
+                                                   outputTemplate: "{Message:lj}",
+                                                   standardErrorFromLevel: LogEventLevel.Error,
+#if DEBUG
+                                                   restrictedToMinimumLevel: LogEventLevel.Debug
+#else
+                         restrictedToMinimumLevel: LogEventLevel.Information
+#endif
+                                               )
+                                               .Filter.ByIncludingOnly(logEvent =>
+                                                                           LogEventExtensions.TryGetStringValue(
+                                                                               logEvent,
+                                                                               "SourceContext",
+                                                                               out var sourceContext
+                                                                           ) && sour
+                                               )
                      )
-                     .WriteTo.Logger(cfg => cfg.Filter.ByExcluding())
+                     .WriteTo.Logger(logger => logger
+                                               .Enrich.With<SourceContextShortenedEnricher>()
+                                               .Enrich.With<SecretLoggerContextEnricher>()
+                                               .WriteTo.File(
+                                                   outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
+                                                   path: LogsHelper.GetLogFilePath(),
+                                                   rollingInterval: RollingInterval.Infinite,
+                                                   fileSizeLimitBytes: 8 * 1024 * 1024,
+                                                   buffered: false,
+                                                   rollOnFileSizeLimit: true,
+                                                   flushToDiskInterval: TimeSpan.FromSeconds(3)
+                                               )
+                     )
                      .CreateLogger();
 
         services.AddLogging(loggingBuilder =>
@@ -42,26 +66,69 @@ internal static class LoggingSetup
             }
         );
 
+        services.AddSingleton<ISpecialLoggerFactory, SpecialLoggerFactory>();
+
         return services;
     }
 
-    private class SourceContextShortenedEnricher : ILogEventEnricher
+    private sealed class SourceContextShortenedEnricher : ILogEventEnricher
     {
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            var sourceContext = logEvent.Properties.TryGetValue("SourceContext", out var contextValue)
-                ? contextValue.ToString().AsSpan().Trim('"')
-                : null;
+            LogEventProperty logEventProperty;
+            if (!LogEventExtensions.TryGetStringValue(logEvent, "SourceContext", out var sourceContext))
+            {
+                logEventProperty = propertyFactory.CreateProperty("SourceContextShortened", "<NoSourceContext>");
+                logEvent.AddPropertyIfAbsent(logEventProperty);
+                return;
+            }
 
-            if (sourceContext.IsEmpty)
+            var dotLastIndex = sourceContext!.LastIndexOf('.');
+            var sourceContextShortened = sourceContext[(dotLastIndex + 1)..];
+            logEventProperty = propertyFactory.CreateProperty("SourceContextShortened", sourceContextShortened);
+            logEvent.AddPropertyIfAbsent(logEventProperty);
+        }
+    }
+
+    private sealed class SecretLoggerContextEnricher : ILogEventEnricher
+    {
+        private static readonly string SecretLoggerContextFullName = typeof(SecretLoggerContext).FullName!;
+
+        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+        {
+            if (!LogEventExtensions.TryGetStringValue(logEvent, "SourceContext", out var sourceContext)
+                || sourceContext != SecretLoggerContextFullName)
             {
                 return;
             }
 
-            var dotLastIndex = sourceContext.LastIndexOf('.');
-            var sourceContextShortened = sourceContext[(dotLastIndex + 1)..].ToString();
-            var logEventProperty = propertyFactory.CreateProperty("SourceContextShortened", sourceContextShortened);
-            logEvent.AddPropertyIfAbsent(logEventProperty);
+            var tokens = logEvent
+                         .MessageTemplate.Tokens
+                         .Where(t => t is PropertyToken)
+                         .Cast<PropertyToken>()
+                         .Select(pt => pt.PropertyName)
+                         .ToHashSet();
+
+            foreach (var token in tokens)
+            {
+                logEvent.RemovePropertyIfPresent(token);
+            }
+        }
+    }
+
+    private static class LogEventExtensions
+    {
+        public static bool TryGetStringValue(LogEvent logEvent, string propertyName, out string? value)
+        {
+            if (logEvent.Properties.TryGetValue(propertyName, out var property)
+                && property is ScalarValue { Value: string { Length: not 0, } stringValue, })
+            {
+                value = stringValue;
+                return true;
+            }
+
+            value = null;
+            return false;
         }
     }
 }
