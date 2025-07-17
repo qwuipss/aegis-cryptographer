@@ -1,5 +1,6 @@
 using Aegis.Cli.Exceptions;
 using Aegis.Cli.Parsers;
+using Aegis.Cli.Parsers.Commands;
 using Aegis.Cli.Services;
 using Microsoft.Extensions.Logging;
 
@@ -16,15 +17,15 @@ internal sealed class Runner(
     private readonly IOldLogFilesCleaner _cleaner = cleaner;
     private readonly ICommandParser _parser = parser;
 
-    public Task RunAsync(string[] args)
+    public async Task RunAsync(string[] parameters)
     {
         try
         {
-            var command = _parser.Parse([..args,], 0);
+            var command = _parser.Parse([..parameters,], 0);
 
             _logger.LogInformation("Executing command '{commandType}'", command.GetType().Name);
 
-            command.Execute();
+            await command.ExecuteAsync();
         }
         catch (IntentionalException exc)
         {
@@ -35,7 +36,9 @@ internal sealed class Runner(
             _logger.LogError(exc, "An unhandled error occured while running command");
         }
 
-        return Task.CompletedTask;
+        _logger.LogInformation("Execution id: {executionId}", AppContext.GetData(GlobalsKeys.ExecutionId));
+
+        return;
 
         try
         {
@@ -46,8 +49,6 @@ internal sealed class Runner(
             _logger.LogError(exc, "An unhandled error occured while cleaning old log files");
         }
 
-        _logger.LogInformation("Execution id: {executionId}", AppContext.GetData(GlobalsKeys.ExecutionId));
-
-        return Task.CompletedTask;
+        return;
     }
 }

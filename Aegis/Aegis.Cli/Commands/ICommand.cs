@@ -1,6 +1,12 @@
+using System.Collections.Immutable;
+using Aegis.Cli.Options;
+using Aegis.Cli.Parsers.Options;
+
 namespace Aegis.Cli.Commands;
 
 internal interface ICommand
 {
-    void Execute();
+    void Initialize(ImmutableArray<string> parameters, IOptionsCollection options);
+    void Validate();
+    Task ExecuteAsync();
 }

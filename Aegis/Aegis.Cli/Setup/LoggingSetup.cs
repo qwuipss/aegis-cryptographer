@@ -58,7 +58,7 @@ internal static class LoggingSetup
                                              .Enrich.With<SecretLoggerPropertiesEraser>()
                                              .WriteTo.File(
                                                  outputTemplate:
-                                                 "{Timestamp:HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
+                                                 "{Timestamp:yyyy-MM-dd.HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
                                                  path: LogsHelper.GetLogFilePath(),
                                                  rollingInterval: RollingInterval.Infinite,
                                                  fileSizeLimitBytes: 8 * 1024 * 1024,
@@ -75,9 +75,7 @@ internal static class LoggingSetup
                 loggingBuilder.AddSerilog();
             }
         );
-
-        services.AddSingleton<ISpecialLoggerFactory, SpecialLoggerFactory>();
-
+        
         return services;
     }
 

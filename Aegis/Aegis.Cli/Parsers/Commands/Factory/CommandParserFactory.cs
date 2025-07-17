@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Aegis.Cli.Parsers.Factory;
+namespace Aegis.Cli.Parsers.Commands.Factory;
 
-internal sealed class CommandParserFactory(IServiceProvider serviceProvider) : ICommandParsersFactory
+internal sealed class CommandParserFactory(IServiceProvider serviceProvider) : ICommandParserFactory
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 

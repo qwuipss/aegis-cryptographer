@@ -1,6 +1,6 @@
-namespace Aegis.Cli.Parsers;
+namespace Aegis.Cli.Parsers.Commands;
 
-internal static class Tokens
+internal static class CommandTokens
 {
     public static class Common
     {
