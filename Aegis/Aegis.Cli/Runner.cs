@@ -1,9 +1,6 @@
-using System.Collections.Immutable;
 using Aegis.Cli.Exceptions;
 using Aegis.Cli.Parsers;
 using Aegis.Cli.Services;
-using Aegis.Cli.Services.Logging;
-using Aegis.Cli.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli;
@@ -11,15 +8,13 @@ namespace Aegis.Cli;
 internal sealed class Runner(
     ILogger<Runner> logger,
     IOldLogFilesCleaner cleaner,
-    ICommandParser parser,
-    ISpecialLoggerFactory specialLoggerFactory
+    ICommandParser parser
 )
     : IRunner
 {
     private readonly ILogger<Runner> _logger = logger;
     private readonly IOldLogFilesCleaner _cleaner = cleaner;
     private readonly ICommandParser _parser = parser;
-    private readonly ISpecialLoggerFactory _specialLoggerFactory = specialLoggerFactory;
 
     public Task RunAsync(string[] args)
     {
@@ -27,20 +22,20 @@ internal sealed class Runner(
         {
             var command = _parser.Parse([..args,], 0);
 
-            var result = command.Execute();
+            _logger.LogInformation("Executing command '{commandType}'", command.GetType().Name);
 
-            var secretLogger = _specialLoggerFactory.CreateSecretLogger();
-            
-            secretLogger.LogInformation("{commandResult}", result.DisplayText);
+            command.Execute();
         }
         catch (IntentionalException exc)
         {
-            _logger.LogError(exc, "{message}", exc.Message);
+            _logger.LogError(exc, "{intentionalExceptionMessage}", exc.Message);
         }
         catch (Exception exc)
         {
             _logger.LogError(exc, "An unhandled error occured while running command");
         }
+
+        return Task.CompletedTask;
 
         try
         {

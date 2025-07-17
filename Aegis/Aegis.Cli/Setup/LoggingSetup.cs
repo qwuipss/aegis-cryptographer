@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Aegis.Cli.Services.Logging;
 using Aegis.Cli.Utilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,50 +11,61 @@ namespace Aegis.Cli.Setup;
 
 internal static class LoggingSetup
 {
+    private static readonly string InlineLoggerTypeFullName = typeof(InlineLogger).FullName!;
+
     public static IServiceCollection SetupUtilityLogging(this IServiceCollection services)
     {
         Log.Logger = new LoggerConfiguration()
                      .MinimumLevel.Debug()
-                     .WriteTo.Logger(logger => logger.WriteTo.Console(
-                                         outputTemplate: "{Message:lj}{NewLine}",
-                                         standardErrorFromLevel: LogEventLevel.Error,
+                     .WriteTo.Logger(logger =>
+                                         logger
+                                             .WriteTo.Console(
+                                                 outputTemplate: "{Message:lj}{NewLine}",
+                                                 standardErrorFromLevel: LogEventLevel.Error,
 #if DEBUG
-                                         restrictedToMinimumLevel: LogEventLevel.Debug
+                                                 restrictedToMinimumLevel: LogEventLevel.Debug
 #else
-                         restrictedToMinimumLevel: LogEventLevel.Information
+                                                 restrictedToMinimumLevel: LogEventLevel.Information
 #endif
-                                     )
+                                             )
+                                             .Filter.ByExcluding(logEvent =>
+                                                                     LogEventExtensions.TryGetStringValue(
+                                                                         logEvent,
+                                                                         "SourceContext",
+                                                                         out var sourceContext
+                                                                     )
+                                                                     && sourceContext == InlineLoggerTypeFullName
+                                             )
                      )
-                     .WriteTo.Logger(logger => logger
-                                               .WriteTo.Console(
-                                                   outputTemplate: "{Message:lj}",
-                                                   standardErrorFromLevel: LogEventLevel.Error,
-#if DEBUG
-                                                   restrictedToMinimumLevel: LogEventLevel.Debug
-#else
-                         restrictedToMinimumLevel: LogEventLevel.Information
-#endif
-                                               )
-                                               .Filter.ByIncludingOnly(logEvent =>
-                                                                           LogEventExtensions.TryGetStringValue(
-                                                                               logEvent,
-                                                                               "SourceContext",
-                                                                               out var sourceContext
-                                                                           ) && sour
-                                               )
+                     .WriteTo.Logger(logger =>
+                                         logger
+                                             .WriteTo.Console(
+                                                 outputTemplate: "{Message:lj}",
+                                                 restrictedToMinimumLevel: LogEventLevel.Information
+                                             )
+                                             .Filter.ByIncludingOnly(logEvent =>
+                                                                         LogEventExtensions.TryGetStringValue(
+                                                                             logEvent,
+                                                                             "SourceContext",
+                                                                             out var sourceContext
+                                                                         )
+                                                                         && sourceContext == InlineLoggerTypeFullName
+                                             )
                      )
-                     .WriteTo.Logger(logger => logger
-                                               .Enrich.With<SourceContextShortenedEnricher>()
-                                               .Enrich.With<SecretLoggerContextEnricher>()
-                                               .WriteTo.File(
-                                                   outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
-                                                   path: LogsHelper.GetLogFilePath(),
-                                                   rollingInterval: RollingInterval.Infinite,
-                                                   fileSizeLimitBytes: 8 * 1024 * 1024,
-                                                   buffered: false,
-                                                   rollOnFileSizeLimit: true,
-                                                   flushToDiskInterval: TimeSpan.FromSeconds(3)
-                                               )
+                     .WriteTo.Logger(logger =>
+                                         logger
+                                             .Enrich.With<SourceContextShortenedEnricher>()
+                                             .Enrich.With<SecretLoggerPropertiesEraser>()
+                                             .WriteTo.File(
+                                                 outputTemplate:
+                                                 "{Timestamp:HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
+                                                 path: LogsHelper.GetLogFilePath(),
+                                                 rollingInterval: RollingInterval.Infinite,
+                                                 fileSizeLimitBytes: 8 * 1024 * 1024,
+                                                 buffered: false,
+                                                 rollOnFileSizeLimit: true,
+                                                 flushToDiskInterval: TimeSpan.FromSeconds(3)
+                                             )
                      )
                      .CreateLogger();
 
@@ -90,14 +100,14 @@ internal static class LoggingSetup
         }
     }
 
-    private sealed class SecretLoggerContextEnricher : ILogEventEnricher
+    private sealed class SecretLoggerPropertiesEraser : ILogEventEnricher
     {
-        private static readonly string SecretLoggerContextFullName = typeof(SecretLoggerContext).FullName!;
+        private static readonly string SecretLoggerTypeFullName = typeof(SecretLogger).FullName!;
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
             if (!LogEventExtensions.TryGetStringValue(logEvent, "SourceContext", out var sourceContext)
-                || sourceContext != SecretLoggerContextFullName)
+                || sourceContext != SecretLoggerTypeFullName)
             {
                 return;
             }

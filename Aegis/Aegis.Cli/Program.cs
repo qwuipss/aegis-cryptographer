@@ -5,17 +5,18 @@ namespace Aegis.Cli;
 
 internal static class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var services = new ServiceCollection();
 
         GlobalsSetup.SetupUtilityGlobals();
-        services.SetupUtilityLogging();
-        services.SetupUtilityServices();
+        services
+            .SetupUtilityLogging()
+            .SetupUtilityServices();
 
-        using var serviceProvider = services.BuildServiceProvider();
+        await using var serviceProvider = services.BuildServiceProvider();
         var runner = serviceProvider.GetRequiredService<IRunner>();
 
-        runner.RunAsync(args);
+        await runner.RunAsync(args);
     }
 }
