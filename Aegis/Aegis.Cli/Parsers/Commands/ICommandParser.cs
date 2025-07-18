@@ -5,5 +5,5 @@ namespace Aegis.Cli.Parsers.Commands;
 
 internal interface ICommandParser
 {
-    ICommand Parse(ImmutableArray<string> parameters, int index);
+    ICommand Parse(ImmutableArray<string> args, int index);
 }

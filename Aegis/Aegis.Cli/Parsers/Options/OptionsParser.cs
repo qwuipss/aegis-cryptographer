@@ -8,17 +8,37 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
 {
     private readonly ILogger<OptionsParser> _logger = logger;
 
-    public IOptionsCollection Parse(ImmutableArray<string> parameters, int index)
+    public (IOptionsCollection Options, int Index) Parse(ImmutableArray<string> args, int index)
     {
-        if (parameters.Length < index + 1)
+        if (args.Length <= index)
         {
-            _logger.LogDebug("Parameters count: {parametersCount}. Index specified: {index}. No options parsed", parameters.Length, index);
-            return OptionsCollection.Empty;
+            _logger.LogDebug("No options parsed");
+            return (OptionsCollection.Empty, index);
         }
 
-        return OptionsCollection.Empty;
-        for (int i = index + 1; i < parameters.Length; i++)
+        // return (OptionsCollection.Empty, index);
+        var optionsList = new List<IOption>();
+        for (int i = index; i < args.Length; i++)
         {
+            var token = args[i];
+
+            if (token == OptionTokens.OptionsParsingTerminateToken)
+            {
+                break;
+            }
+
+            if (token.StartsWith(OptionTokens.LongTokenPrefix))
+            {
+                var key = token[2..];
+            }
+            else if (token.StartsWith(OptionTokens.ShortTokenPrefix))
+            {
+                var key = token[1..];
+            }
+            else
+            {
+                
+            }
         }
     }
 }

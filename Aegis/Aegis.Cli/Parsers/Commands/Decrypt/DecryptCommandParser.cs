@@ -5,7 +5,7 @@ namespace Aegis.Cli.Parsers.Commands.Decrypt;
 
 internal sealed class DecryptCommandParser : ICommandParser
 {
-    public ICommand Parse(ImmutableArray<string> parameters, int index)
+    public ICommand Parse(ImmutableArray<string> args, int index)
     {
         return null;
     }

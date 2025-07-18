@@ -5,5 +5,5 @@ namespace Aegis.Cli.Parsers.Options;
 
 internal interface IOptionsParser
 {
-    IOptionsCollection Parse(ImmutableArray<string> parameters, int index);
+    (IOptionsCollection Options, int Index) Parse(ImmutableArray<string> args, int index);
 }

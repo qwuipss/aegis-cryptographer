@@ -3,6 +3,7 @@ using Aegis.Cli.Commands;
 using Aegis.Cli.Commands.Encrypt;
 using Aegis.Cli.Commands.Factory;
 using Aegis.Cli.Exceptions.Parsers;
+using Aegis.Cli.Exceptions.Parsers.Commands;
 using Aegis.Cli.Parsers.Options;
 using Microsoft.Extensions.Logging;
 
@@ -15,33 +16,26 @@ internal sealed class EncryptCommandParser(ILogger<EncryptCommandParser> logger,
     private readonly IOptionsParser _optionsParser = optionsParser;
     private readonly ICommandFactory _commandFactory = commandFactory;
 
-    public ICommand Parse(ImmutableArray<string> parameters, int index)
+    public ICommand Parse(ImmutableArray<string> args, int index)
     {
-        if (parameters.Length < index + 1)
+        if (args.Length <= index)
         {
             throw new CommandNotParsedException();
         }
 
-        var token = parameters[index];
-        var commandType = token switch
+        var token = args[index];
+        var command = token switch
         {
-            CommandTokens.Common.String.LongToken or CommandTokens.Common.String.ShortToken => GetEncryptStringCommand(parameters, index + 1),
-            _ => throw new UnexpectedTokenException(token),
+            CommandTokens.Common.String.LongToken or CommandTokens.Common.String.ShortToken => GetEncryptStringCommand(args, index + 1),
+            _ => throw new CommandNotParsedException(),
         };
 
-        return commandType;
+        return command;
     }
 
-    private EncryptStringCommand GetEncryptStringCommand(ImmutableArray<string> parameters, int index)
+    private EncryptStringCommand GetEncryptStringCommand(ImmutableArray<string> args, int index)
     {
-        if (parameters.Length < index + 1)
-        {
-            throw new CommandParametersNotParsedException();
-        }
-
-        var valueToEncrypt = parameters[index];
-        var options = _optionsParser.Parse(parameters, index + 2);
-
-        return _commandFactory.Create<EncryptStringCommand>([valueToEncrypt,], options);
+        var (options, parametersIndex) = _optionsParser.Parse(args, index);
+        return _commandFactory.Create<EncryptStringCommand>(args[parametersIndex..], options);
     }
 }
