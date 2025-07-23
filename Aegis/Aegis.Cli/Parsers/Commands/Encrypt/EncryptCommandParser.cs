@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Aegis.Cli.Commands;
 using Aegis.Cli.Commands.Encrypt;
 using Aegis.Cli.Commands.Factory;
-using Aegis.Cli.Exceptions.Parsers;
 using Aegis.Cli.Exceptions.Parsers.Commands;
 using Aegis.Cli.Parsers.Options;
 using Microsoft.Extensions.Logging;

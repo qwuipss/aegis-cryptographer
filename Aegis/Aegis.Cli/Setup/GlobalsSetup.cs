@@ -1,6 +1,6 @@
 namespace Aegis.Cli.Setup;
 
-internal class GlobalsSetup
+internal static class GlobalsSetup
 {
     public static void SetupUtilityGlobals()
     {

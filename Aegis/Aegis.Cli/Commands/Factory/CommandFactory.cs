@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Options;
+using Aegis.Cli.Options.Collection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

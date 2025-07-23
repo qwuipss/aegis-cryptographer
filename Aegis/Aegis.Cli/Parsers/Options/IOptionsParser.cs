@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Options;
+using Aegis.Cli.Options.Collection;
 
 namespace Aegis.Cli.Parsers.Options;
 

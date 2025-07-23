@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Services;
 
-internal class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : IOldLogFilesCleaner
+internal sealed class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : IOldLogFilesCleaner
 {
     private readonly ILogger<OldLogFilesCleaner> _logger = logger;
 

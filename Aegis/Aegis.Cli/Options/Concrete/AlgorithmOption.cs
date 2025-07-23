@@ -1,10 +1,10 @@
+using Aegis.Cli.Options.Abstract;
+using Aegis.Cli.Options.Attributes;
+
 namespace Aegis.Cli.Options.Concrete;
 
-internal sealed class AlgorithmOption(string value) : IOption
+[OptionShortToken("alg")]
+[OptionLongToken("algorithm")]
+internal sealed class AlgorithmOption : StringOption
 {
-    public string Value { get; } = value;
-
-    public void Validate()
-    {
-    }
 }

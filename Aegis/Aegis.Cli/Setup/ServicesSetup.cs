@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Aegis.Cli.Setup;
 
-internal static class SetupServices
+internal static class ServicesSetup
 {
     public static IServiceCollection SetupUtilityServices(this IServiceCollection services)
     {
@@ -33,8 +33,8 @@ internal static class SetupServices
                     .GetTypes()
                     .Where(type =>
                                type != typeof(RootCommandParser)
-                               && parserType.IsAssignableFrom(type)
                                && type is { IsInterface: false, IsAbstract: false, }
+                               && parserType.IsAssignableFrom(type)
                     );
 
         foreach (var type in types)

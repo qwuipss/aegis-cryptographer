@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Options;
+using Aegis.Cli.Options.Collection;
 
 namespace Aegis.Cli.Commands;
 
@@ -11,7 +12,7 @@ internal abstract class BaseCommand : ICommand
 
     protected IOptionsCollection Options { get; private set; } = null!;
 
-    public void Initialize(ImmutableArray<string> parameters, IOptionsCollection options)
+    public virtual void Initialize(ImmutableArray<string> parameters, IOptionsCollection options)
     {
         if (_isInitialized)
         {

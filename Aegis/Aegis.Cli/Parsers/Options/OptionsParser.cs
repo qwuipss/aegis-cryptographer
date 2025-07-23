@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Options;
+using Aegis.Cli.Options.Abstract;
+using Aegis.Cli.Options.Collection;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Parsers.Options;
@@ -12,33 +14,38 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
     {
         if (args.Length <= index)
         {
-            _logger.LogDebug("No options parsed");
             return (OptionsCollection.Empty, index);
         }
 
         // return (OptionsCollection.Empty, index);
         var optionsList = new List<IOption>();
-        for (int i = index; i < args.Length; i++)
+        while (index < args.Length)
         {
-            var token = args[i];
+            var token = args[index];
 
-            if (token == OptionTokens.OptionsParsingTerminateToken)
+            if (token == OptionMarkup.OptionsTerminateToken)
+            {
+                index++;
+                break;
+            }
+
+            if (token.StartsWith(OptionMarkup.LongTokenPrefix))
+            {
+            }
+            else if (token.StartsWith(OptionMarkup.ShortTokenPrefix))
+            {
+            }
+            else
             {
                 break;
             }
 
-            if (token.StartsWith(OptionTokens.LongTokenPrefix))
+            if (args.Length <= index)
             {
-                var key = token[2..];
+                // single
             }
-            else if (token.StartsWith(OptionTokens.ShortTokenPrefix))
-            {
-                var key = token[1..];
-            }
-            else
-            {
-                
-            }
+
+            var value = args[index];
         }
     }
 }

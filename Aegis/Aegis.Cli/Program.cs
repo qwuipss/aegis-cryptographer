@@ -10,6 +10,8 @@ internal static class Program
         var services = new ServiceCollection();
 
         GlobalsSetup.SetupUtilityGlobals();
+        ValidatorsSetup.SetupValidators();
+        
         services
             .SetupUtilityLogging()
             .SetupUtilityServices();
