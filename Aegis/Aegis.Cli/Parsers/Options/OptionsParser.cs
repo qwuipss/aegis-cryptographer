@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
+using Aegis.Cli.Exceptions.Options;
 using Aegis.Cli.Options;
-using Aegis.Cli.Options.Abstract;
 using Aegis.Cli.Options.Collection;
 using Microsoft.Extensions.Logging;
 
@@ -17,35 +17,79 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
             return (OptionsCollection.Empty, index);
         }
 
-        // return (OptionsCollection.Empty, index);
-        var optionsList = new List<IOption>();
+        var options = new HashSet<IOption>();
         while (index < args.Length)
         {
             var token = args[index];
 
-            if (token == OptionMarkup.OptionsTerminateToken)
+            if (token == OptionTokens.OptionsTerminateToken)
             {
                 index++;
                 break;
             }
 
-            if (token.StartsWith(OptionMarkup.LongTokenPrefix))
+            string name;
+            if (token.StartsWith(OptionTokens.LongTokenPrefix))
             {
+                name = GetOptionName(token, OptionTokens.LongTokenPrefix);
             }
-            else if (token.StartsWith(OptionMarkup.ShortTokenPrefix))
+            else if (token.StartsWith(OptionTokens.ShortTokenPrefix))
             {
+                name = GetOptionName(token, OptionTokens.ShortTokenPrefix);
             }
             else
             {
                 break;
             }
 
-            if (args.Length <= index)
+            index++;
+            if (index == args.Length)
             {
-                // single
+                break;
             }
 
             var value = args[index];
+
+            if (value.StartsWith(OptionTokens.LongTokenPrefix) || value.StartsWith(OptionTokens.ShortTokenPrefix))
+            {
+                CreateAndAddOptionWithoutValue(name, options);
+                continue;
+            }
+
+            var option = CreateOption(name, value);
+            options.Add(option);
+            continue;
+
+            static void CreateAndAddOptionWithoutValue(string name, HashSet<IOption> options)
+            {
+                var option = CreateOption(name, null);
+                options.Add(option);
+            }
         }
+
+        return (new OptionsCollection(options.ToImmutableHashSet()), index);
+    }
+
+    private static string GetOptionName(string token, string prefix)
+    {
+        if (token.Length == prefix.Length)
+        {
+            throw new OptionNameNotParsedException(token);
+        }
+
+        return token[prefix.Length..];
+    }
+
+    private static IOption CreateOption(string name, string? value)
+    {
+        IOption option = name switch
+        {
+            OptionTokens.Algorithm.ShortToken or OptionTokens.Algorithm.LongToken
+                => new StringOption(OptionKey.Algorithm, value ?? throw new OptionValueIsNullException(name)),
+        };
+
+        option.Validate();
+
+        return option;
     }
 }
