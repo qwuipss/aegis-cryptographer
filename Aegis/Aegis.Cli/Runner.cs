@@ -23,13 +23,13 @@ internal sealed class Runner(
         {
             var command = _parser.Parse([..parameters,], 0);
 
-            _logger.LogInformation("Executing command '{commandType}'", command.GetType().Name);
+            _logger.LogDebug("Executing command '{commandType}'", command.GetType().Name);
 
             await command.ExecuteAsync();
         }
         catch (IntentionalException exc)
         {
-            _logger.LogError(exc, "{intentionalExceptionMessage}", exc.Message);
+            _logger.LogError(exc, "{message}", exc.Message);
         }
         catch (Exception exc)
         {
@@ -38,7 +38,7 @@ internal sealed class Runner(
 
         _logger.LogInformation("Execution id: {executionId}", AppContext.GetData(GlobalsKeys.ExecutionId));
 
-        return;
+        // return;
 
         try
         {

@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Commands;
-using Aegis.Cli.Exceptions.Parsers;
 using Aegis.Cli.Exceptions.Parsers.Commands;
 using Aegis.Cli.Parsers.Commands.Decrypt;
 using Aegis.Cli.Parsers.Commands.Encrypt;

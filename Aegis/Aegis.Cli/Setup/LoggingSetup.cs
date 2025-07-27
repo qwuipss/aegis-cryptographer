@@ -58,7 +58,7 @@ internal static class LoggingSetup
                                              .Enrich.With<SecretLoggerPropertiesEraser>()
                                              .WriteTo.File(
                                                  outputTemplate:
-                                                 "{Timestamp:yyyy-MM-dd.HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
+                                                 "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] [{SourceContextShortened}] {Message:lj}{NewLine}{Exception}",
                                                  path: LogsHelper.GetLogFilePath(),
                                                  rollingInterval: RollingInterval.Infinite,
                                                  fileSizeLimitBytes: 8 * 1024 * 1024,

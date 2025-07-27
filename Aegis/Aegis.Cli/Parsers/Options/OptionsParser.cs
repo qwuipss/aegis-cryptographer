@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Exceptions.Options;
+using Aegis.Cli.Exceptions.Parsers.Options;
 using Aegis.Cli.Options;
 using Aegis.Cli.Options.Collection;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
     {
         if (args.Length <= index)
         {
+            _logger.LogDebug("No options parsed");
             return (OptionsCollection.Empty, index);
         }
 
@@ -22,73 +24,84 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
         {
             var token = args[index];
 
-            if (token == OptionTokens.OptionsTerminateToken)
+            if (token is OptionTokens.OptionsTerminateToken)
             {
                 index++;
                 break;
             }
 
-            string name;
-            if (token.StartsWith(OptionTokens.LongTokenPrefix))
-            {
-                name = GetOptionName(token, OptionTokens.LongTokenPrefix);
-            }
-            else if (token.StartsWith(OptionTokens.ShortTokenPrefix))
-            {
-                name = GetOptionName(token, OptionTokens.ShortTokenPrefix);
-            }
-            else
+            if (!TryParseOptionName(token, out var name))
             {
                 break;
             }
 
             index++;
-            if (index == args.Length)
+
+            IOption option;
+            var value = index == args.Length ? null : args[index];
+            if (value is not null && IsStartingAsOptionName(value))
             {
-                break;
+                option = CreateOption(token, name!, null);
+            }
+            else
+            {
+                option = CreateOption(token, name!, value);
+                index++;
             }
 
-            var value = args[index];
+            _logger.LogDebug("Parsed option '{optionName}.{optionKey}'", option.GetType().Name, option.Key.ToString());
 
-            if (value.StartsWith(OptionTokens.LongTokenPrefix) || value.StartsWith(OptionTokens.ShortTokenPrefix))
+            if (!options.Add(option))
             {
-                CreateAndAddOptionWithoutValue(name, options);
-                continue;
-            }
-
-            var option = CreateOption(name, value);
-            options.Add(option);
-            continue;
-
-            static void CreateAndAddOptionWithoutValue(string name, HashSet<IOption> options)
-            {
-                var option = CreateOption(name, null);
-                options.Add(option);
+                throw new OptionDuplicateException(option.Key);
             }
         }
 
         return (new OptionsCollection(options.ToImmutableHashSet()), index);
     }
 
-    private static string GetOptionName(string token, string prefix)
+    private static bool TryParseOptionName(string token, out string? name)
     {
-        if (token.Length == prefix.Length)
+        if (token.StartsWith(OptionTokens.LongTokenPrefix))
+        {
+            name = GetOptionName(token, OptionTokens.LongTokenPrefix);
+        }
+        else if (token.StartsWith(OptionTokens.ShortTokenPrefix))
+        {
+            name = GetOptionName(token, OptionTokens.ShortTokenPrefix);
+        }
+        else
+        {
+            name = null;
+            return false;
+        }
+
+        if (name.Length is 0)
         {
             throw new OptionNameNotParsedException(token);
         }
 
-        return token[prefix.Length..];
+        return true;
+
+        static string GetOptionName(string token, string prefix)
+        {
+            return token[prefix.Length..];
+        }
     }
 
-    private static IOption CreateOption(string name, string? value)
+    private static bool IsStartingAsOptionName(string token)
+    {
+        return token.StartsWith(OptionTokens.LongTokenPrefix) || token.StartsWith(OptionTokens.ShortTokenPrefix);
+    }
+
+    private static IOption CreateOption(string token, string name, string? value)
     {
         IOption option = name switch
         {
             OptionTokens.Algorithm.ShortToken or OptionTokens.Algorithm.LongToken
-                => new StringOption(OptionKey.Algorithm, value ?? throw new OptionValueIsNullException(name)),
+                => new StringOption(OptionKey.Algorithm, value ?? throw new OptionValueIsNullException(token)),
+            _ => throw new OptionNameNotParsedException(token),
         };
-
-        option.Validate();
 
         return option;
     }

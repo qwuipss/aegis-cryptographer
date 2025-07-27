@@ -6,5 +6,7 @@ internal sealed class OptionsCollection(ImmutableHashSet<IOption> options) : IOp
 {
     public static readonly OptionsCollection Empty = new([]);
 
+    public int Count => _options.Count;
+
     private readonly ImmutableHashSet<IOption> _options = options;
 }

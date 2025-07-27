@@ -2,9 +2,9 @@ using Aegis.Cli.Extensions;
 using Aegis.Cli.Services.Logging;
 using Microsoft.Extensions.Logging;
 
-namespace Aegis.Cli.Commands.Encrypt;
+namespace Aegis.Cli.Commands.Decrypt;
 
-internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger, ILogger<SecretLogger> secretLogger)
+internal sealed class DecryptStringCommand(ILogger<DecryptStringCommand> logger, ILogger<SecretLogger> secretLogger)
     : BaseCommand(logger)
 {
     private readonly ILogger<SecretLogger> _secretLogger = secretLogger;
@@ -12,12 +12,11 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
     public override void Validate()
     {
         Parameters.ShouldContainSingleParameter();
-        Options.ShouldContainOnlyOptions();
     }
 
     public override Task ExecuteAsync()
     {
-        _secretLogger.LogInformation("Encrypted value: {value}", "test123123123---");
+        _secretLogger.LogInformation("Decrypted value: {value}", "12312312312   sd");
         return Task.CompletedTask;
     }
 }

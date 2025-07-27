@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Aegis.Cli.Exceptions.Commands;
 
 namespace Aegis.Cli.Extensions;
 
@@ -8,7 +9,7 @@ internal static class CommandExtensions
     {
         if (parameters.Length is not 1)
         {
-            throw new ArgumentOutOfRangeException(nameof(parameters), "Parameters collection should contain single parameter only");
+            throw new CommandParametersCountMismatch(1, parameters.Length);
         }
     }
 }

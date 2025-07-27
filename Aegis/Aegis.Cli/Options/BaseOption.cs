@@ -6,7 +6,13 @@ internal abstract class BaseOption<TValue>(OptionKey key) : IOption
 
     public OptionKey Key { get; } = key;
 
-    public virtual void Validate()
+    public override bool Equals(object? obj)
     {
+        return obj is IOption option && option.Key == Key;
+    }
+
+    public override int GetHashCode()
+    {
+        return Key.GetHashCode();
     }
 }

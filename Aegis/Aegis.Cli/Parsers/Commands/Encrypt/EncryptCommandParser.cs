@@ -9,13 +9,11 @@ using Microsoft.Extensions.Logging;
 namespace Aegis.Cli.Parsers.Commands.Encrypt;
 
 internal sealed class EncryptCommandParser(ILogger<EncryptCommandParser> logger, ICommandFactory commandFactory, IOptionsParser optionsParser)
-    : ICommandParser
+    : BaseCommandParser(logger, optionsParser)
 {
-    private readonly ILogger<EncryptCommandParser> _logger = logger;
-    private readonly IOptionsParser _optionsParser = optionsParser;
     private readonly ICommandFactory _commandFactory = commandFactory;
 
-    public ICommand Parse(ImmutableArray<string> args, int index)
+    public override ICommand Parse(ImmutableArray<string> args, int index)
     {
         if (args.Length <= index)
         {
@@ -34,7 +32,7 @@ internal sealed class EncryptCommandParser(ILogger<EncryptCommandParser> logger,
 
     private EncryptStringCommand GetEncryptStringCommand(ImmutableArray<string> args, int index)
     {
-        var (options, parametersIndex) = _optionsParser.Parse(args, index);
+        var (options, parametersIndex) = ParseOptions(args, index);
         return _commandFactory.Create<EncryptStringCommand>(args[parametersIndex..], options);
     }
 }

@@ -23,7 +23,7 @@ internal sealed class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : I
             + "Log file for current execution created: {isCurrentExecutionLogFileCreated}",
             fileInfos.Count,
             keepLogFilesCount,
-            isCurrentExecutionLogFileCreated
+            isCurrentExecutionLogFileCreated.ToString()
         );
 
         var totalLogFilesCount = isCurrentExecutionLogFileCreated ? fileInfos.Count : fileInfos.Count + 1;
@@ -37,7 +37,7 @@ internal sealed class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : I
             ? fileInfos.Count - keepLogFilesCount
             : fileInfos.Count - keepLogFilesCount + 1;
 
-        _logger.LogDebug("Cleaning is started. Pending deletion of {filesCount} files", filesToDeleteCount);
+        _logger.LogDebug("Cleaning is started. Pending deletion of {filesCount} file(s)", filesToDeleteCount);
 
         foreach (var fileInfo in fileInfos
                                  .OrderBy(f => f.CreationTime)
