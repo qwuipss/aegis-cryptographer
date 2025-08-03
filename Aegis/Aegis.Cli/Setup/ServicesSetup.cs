@@ -4,6 +4,7 @@ using Aegis.Cli.Parsers.Commands;
 using Aegis.Cli.Parsers.Commands.Factory;
 using Aegis.Cli.Parsers.Options;
 using Aegis.Cli.Services;
+using Aegis.Cli.Services.Algorithms;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aegis.Cli.Setup;
@@ -16,6 +17,7 @@ internal static class ServicesSetup
             .AddSingleton<IRunner, Runner>()
             .AddSingleton<IOldLogFilesCleaner, OldLogFilesCleaner>()
             .AddSingleton<IOptionsParser, OptionsParser>()
+            .AddSingleton<IAlgorithmResolver, AlgorithmResolver>()
             .AddCommandParsers()
             .AddCommands();
 

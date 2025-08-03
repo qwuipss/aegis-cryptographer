@@ -1,4 +1,8 @@
 using Aegis.Cli.Extensions;
+using Aegis.Cli.Options;
+using Aegis.Cli.Options.Abstract;
+using Aegis.Cli.Options.Concrete;
+using Aegis.Cli.Services.Algorithms;
 using Aegis.Cli.Services.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -12,12 +16,13 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
     public override void Validate()
     {
         Parameters.ShouldContainSingleParameter();
-        Options.ShouldContainOnlyOptions();
+        Options.ShouldContainOnlyOptions<AlgorithmOption>();
     }
 
     public override Task ExecuteAsync()
     {
-        _secretLogger.LogInformation("Encrypted value: {value}", "test123123123---");
+        var algorithm = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Aes.Medium;
+        _secretLogger.LogInformation("Encrypted value: {value}", algorithm);
         return Task.CompletedTask;
     }
 }

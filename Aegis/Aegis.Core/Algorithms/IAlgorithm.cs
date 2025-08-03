@@ -2,7 +2,8 @@ using System.Collections.Immutable;
 
 namespace Aegis.Core.Algorithms;
 
-internal interface IAlgorithm
+public interface IAlgorithm
 {
     byte[] Encrypt(ImmutableArray<byte> data);
+    byte[] Decrypt(ImmutableArray<byte> data);
 }

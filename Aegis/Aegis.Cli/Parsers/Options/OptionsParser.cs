@@ -2,7 +2,9 @@ using System.Collections.Immutable;
 using Aegis.Cli.Exceptions.Options;
 using Aegis.Cli.Exceptions.Parsers.Options;
 using Aegis.Cli.Options;
+using Aegis.Cli.Options.Abstract;
 using Aegis.Cli.Options.Collection;
+using Aegis.Cli.Options.Concrete;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Parsers.Options;
@@ -49,11 +51,11 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
                 index++;
             }
 
-            _logger.LogDebug("Parsed option '{optionName}.{optionKey}'", option.GetType().Name, option.Key.ToString());
+            _logger.LogDebug("Parsed option '{optionName}'", option.GetType().Name);
 
             if (!options.Add(option))
             {
-                throw new OptionDuplicateException(option.Key);
+                throw new OptionDuplicateException(option);
             }
         }
 
@@ -99,7 +101,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
         IOption option = name switch
         {
             OptionTokens.Algorithm.ShortToken or OptionTokens.Algorithm.LongToken
-                => new StringOption(OptionKey.Algorithm, value ?? throw new OptionValueIsNullException(token)),
+                => new AlgorithmOption(value ?? throw new OptionValueIsNullException(token)),
             _ => throw new OptionNameNotParsedException(token),
         };
 
