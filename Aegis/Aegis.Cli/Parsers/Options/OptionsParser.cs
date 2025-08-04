@@ -55,7 +55,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
 
             if (!options.Add(option))
             {
-                throw new OptionDuplicateException(option);
+                throw new OptionDuplicateDetectedException(option);
             }
         }
 

@@ -2,6 +2,7 @@ using Aegis.Cli.Exceptions;
 using Aegis.Cli.Parsers;
 using Aegis.Cli.Parsers.Commands;
 using Aegis.Cli.Services;
+using Aegis.Cli.Services.Files;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli;

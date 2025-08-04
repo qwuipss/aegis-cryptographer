@@ -3,8 +3,9 @@ using Aegis.Cli.Commands.Factory;
 using Aegis.Cli.Parsers.Commands;
 using Aegis.Cli.Parsers.Commands.Factory;
 using Aegis.Cli.Parsers.Options;
-using Aegis.Cli.Services;
 using Aegis.Cli.Services.Algorithms;
+using Aegis.Cli.Services.Files;
+using Aegis.Cli.Services.Interaction;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aegis.Cli.Setup;
@@ -13,21 +14,46 @@ internal static class ServicesSetup
 {
     public static IServiceCollection SetupUtilityServices(this IServiceCollection services)
     {
-        services
-            .AddSingleton<IRunner, Runner>()
-            .AddSingleton<IOldLogFilesCleaner, OldLogFilesCleaner>()
-            .AddSingleton<IOptionsParser, OptionsParser>()
-            .AddSingleton<IAlgorithmResolver, AlgorithmResolver>()
-            .AddCommandParsers()
-            .AddCommands();
+        return services
+               .AddRunner()
+               .AddAlgorithmServices()
+               .AddInteractionServices()
+               .AddFileServices()
+               .AddOptionsParser()
+               .AddCommandParsers()
+               .AddCommands();
+    }
 
-        return services;
+    private static IServiceCollection AddRunner(this IServiceCollection services)
+    {
+        return services.AddSingleton<IRunner, Runner>();
+    }
+
+    private static IServiceCollection AddOptionsParser(this IServiceCollection services)
+    {
+        return services.AddSingleton<IOptionsParser, OptionsParser>();
+    }
+
+    private static IServiceCollection AddInteractionServices(this IServiceCollection services)
+    {
+        return services.AddSingleton<IConsoleReader, ConsoleReader>();
+    }
+
+    private static IServiceCollection AddAlgorithmServices(this IServiceCollection services)
+    {
+        return services.AddSingleton<IAlgorithmResolver, AlgorithmResolver>();
+    }
+
+    private static IServiceCollection AddFileServices(this IServiceCollection services)
+    {
+        return services.AddSingleton<IOldLogFilesCleaner, OldLogFilesCleaner>();
     }
 
     private static IServiceCollection AddCommandParsers(this IServiceCollection services)
     {
-        services.AddSingleton<ICommandParserFactory, CommandParserFactory>();
-        services.AddSingleton<ICommandParser, RootCommandParser>();
+        services
+            .AddSingleton<ICommandParserFactory, CommandParserFactory>()
+            .AddSingleton<ICommandParser, RootCommandParser>();
 
         var parserType = typeof(ICommandParser);
         var types = parserType

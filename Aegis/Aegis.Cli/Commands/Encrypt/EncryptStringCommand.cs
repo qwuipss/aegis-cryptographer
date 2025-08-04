@@ -8,10 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Commands.Encrypt;
 
-internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger, ILogger<SecretLogger> secretLogger)
+internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger, ILogger<SecretLogger> secretLogger, IAlgorithmResolver algorithmResolver)
     : BaseCommand(logger)
 {
+    private readonly ILogger<EncryptStringCommand> _logger = logger;
     private readonly ILogger<SecretLogger> _secretLogger = secretLogger;
+    private readonly IAlgorithmResolver _algorithmResolver = algorithmResolver;
 
     public override void Validate()
     {
@@ -21,7 +23,8 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
 
     public override Task ExecuteAsync()
     {
-        var algorithm = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Aes.Medium;
+        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Aes.Medium;
+        var algorithm = _algorithmResolver.Resolve(algorithmToken);
         _secretLogger.LogInformation("Encrypted value: {value}", algorithm);
         return Task.CompletedTask;
     }

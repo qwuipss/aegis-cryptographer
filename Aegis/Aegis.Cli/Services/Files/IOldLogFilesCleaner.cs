@@ -1,4 +1,4 @@
-namespace Aegis.Cli.Services;
+namespace Aegis.Cli.Services.Files;
 
 internal interface IOldLogFilesCleaner
 {

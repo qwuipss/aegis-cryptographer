@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Aegis.Core.Algorithms;
 
-public sealed class Aes0Algorithm : IAlgorithm
+public sealed class Aes0MAlgorithm : IAlgorithm
 {
     private const int KeySizeBytes = 32;
     private const int TagSizeBytes = 16;
@@ -12,12 +12,12 @@ public sealed class Aes0Algorithm : IAlgorithm
     private readonly byte[] _key;
     private readonly byte[] _iv;
 
-    public Aes0Algorithm(string password)
+    public Aes0MAlgorithm()
     {
-        var salt = RandomNumberGenerator.GetBytes(16);
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
-        _key = pbkdf2.GetBytes(KeySizeBytes);
-        _iv = RandomNumberGenerator.GetBytes(IvSizeBytes);
+        // var salt = RandomNumberGenerator.GetBytes(16);
+        // using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
+        // _key = pbkdf2.GetBytes(KeySizeBytes);
+        // _iv = RandomNumberGenerator.GetBytes(IvSizeBytes);
     }
 
     public byte[] Encrypt(ImmutableArray<byte> data)
