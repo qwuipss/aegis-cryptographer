@@ -17,7 +17,7 @@ internal sealed class RootCommandParser(ILogger<RootCommandParser> logger, IComm
     {
         if (args.Length <= index)
         {
-            throw new CommandNotParsedException();
+            throw new CommandNotRecognizedException();
         }
 
         var token = args[index];
@@ -25,14 +25,12 @@ internal sealed class RootCommandParser(ILogger<RootCommandParser> logger, IComm
         {
             CommandTokens.Encrypt.LongToken or CommandTokens.Encrypt.ShortToken => _parserFactory.Create<EncryptCommandParser>(),
             CommandTokens.Decrypt.LongToken or CommandTokens.Decrypt.ShortToken => _parserFactory.Create<DecryptCommandParser>(),
-            _ => throw new CommandNotParsedException(),
+            _ => throw new CommandNotRecognizedException(),
         };
 
         _logger.LogDebug("Resolved parser '{parserType}'", parser.GetType().Name);
 
         var command = parser.Parse(args, 1);
-
-        _logger.LogDebug("Parsed command '{commandName}'", command.GetType().Name);
 
         return command;
     }

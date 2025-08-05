@@ -4,5 +4,5 @@ namespace Aegis.Cli.Services.Algorithms;
 
 internal interface IAlgorithmResolver
 {
-    IAlgorithm Resolve(string algorithmName);
+    IAlgorithm Resolve(string token);
 }

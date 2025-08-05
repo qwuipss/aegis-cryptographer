@@ -18,18 +18,18 @@ internal sealed class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : I
 
         var isCurrentExecutionLogFileCreated = fileInfos.Select(f => f.Name).Contains(LogsHelper.GetLogFileName());
 
-        _logger.LogDebug(
-            "Log files found: {filesFoundCount}. Keep log files count: {filesKeepCount}. "
-            + "Log file for current execution created: {isCurrentExecutionLogFileCreated}",
-            fileInfos.Count,
-            keepLogFilesCount,
-            isCurrentExecutionLogFileCreated.ToString()
-        );
+        // _logger.LogDebug(
+        //     "Log files found: {filesFoundCount}. Keep log files count: {filesKeepCount}. "
+        //     + "Log file for current execution created: {isCurrentExecutionLogFileCreated}",
+        //     fileInfos.Count,
+        //     keepLogFilesCount,
+        //     isCurrentExecutionLogFileCreated.ToString()
+        // );
 
         var totalLogFilesCount = isCurrentExecutionLogFileCreated ? fileInfos.Count : fileInfos.Count + 1;
         if (totalLogFilesCount <= keepLogFilesCount)
         {
-            _logger.LogDebug("No cleaning required");
+            // _logger.LogDebug("No cleaning required");
             return;
         }
 
@@ -37,17 +37,17 @@ internal sealed class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : I
             ? fileInfos.Count - keepLogFilesCount
             : fileInfos.Count - keepLogFilesCount + 1;
 
-        _logger.LogDebug("Cleaning is started. Pending deletion of {filesCount} file(s)", filesToDeleteCount);
+        // _logger.LogDebug("Cleaning is started. Pending deletion of {filesCount} file(s)", filesToDeleteCount);
 
         foreach (var fileInfo in fileInfos
                                  .OrderBy(f => f.CreationTime)
                                  .Take(filesToDeleteCount))
         {
-            _logger.LogDebug(
-                "Deleting file '{fileName}'. File creation time: {creationTime}",
-                fileInfo.Name,
-                fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss")
-            );
+            // _logger.LogDebug(
+            //     "Deleting file '{fileName}'. File creation time: {creationTime}",
+            //     fileInfo.Name,
+            //     fileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm:ss")
+            // );
 
             try
             {
@@ -59,9 +59,9 @@ internal sealed class OldLogFilesCleaner(ILogger<OldLogFilesCleaner> logger) : I
                 continue;
             }
 
-            _logger.LogDebug("File '{fileName}' deleted", fileInfo.Name);
+            // _logger.LogDebug("File '{fileName}' deleted", fileInfo.Name);
         }
 
-        _logger.LogDebug("Cleaning is finished");
+        // _logger.LogDebug("Cleaning is finished");
     }
 }

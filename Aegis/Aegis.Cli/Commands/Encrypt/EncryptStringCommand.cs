@@ -17,7 +17,7 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
 
     public override void Validate()
     {
-        Parameters.ShouldContainSingleParameter();
+        Parameters.ShouldNotContainParameters();
         Options.ShouldContainOnlyOptions<AlgorithmOption>();
     }
 
@@ -25,7 +25,10 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
     {
         var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Aes.Medium;
         var algorithm = _algorithmResolver.Resolve(algorithmToken);
-        _secretLogger.LogInformation("Encrypted value: {value}", algorithm);
+        
+        
+        
+        _secretLogger.LogInformation("Encrypted string: {value}", algorithm);
         return Task.CompletedTask;
     }
 }

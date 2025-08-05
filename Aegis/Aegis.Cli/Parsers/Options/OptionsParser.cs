@@ -32,7 +32,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
                 break;
             }
 
-            if (!TryParseOptionName(token, out var name))
+            if (!TryParseOption(token, out var name))
             {
                 break;
             }
@@ -51,7 +51,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
                 index++;
             }
 
-            _logger.LogDebug("Parsed option '{optionName}'", option.GetType().Name);
+            _logger.LogDebug("Parsed option '{option}'", option.GetType().Name);
 
             if (!options.Add(option))
             {
@@ -62,7 +62,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
         return (new OptionsCollection(options.ToImmutableHashSet()), index);
     }
 
-    private static bool TryParseOptionName(string token, out string? name)
+    private static bool TryParseOption(string token, out string? name)
     {
         if (token.StartsWith(OptionTokens.LongTokenPrefix))
         {
@@ -80,7 +80,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
 
         if (name.Length is 0)
         {
-            throw new OptionNameNotParsedException(token);
+            throw new OptionNotRecognizedException(token);
         }
 
         return true;
@@ -102,7 +102,7 @@ internal sealed class OptionsParser(ILogger<OptionsParser> logger) : IOptionsPar
         {
             OptionTokens.Algorithm.ShortToken or OptionTokens.Algorithm.LongToken
                 => new AlgorithmOption(value ?? throw new OptionValueIsNullException(token)),
-            _ => throw new OptionNameNotParsedException(token),
+            _ => throw new OptionNotRecognizedException(token),
         };
 
         return option;

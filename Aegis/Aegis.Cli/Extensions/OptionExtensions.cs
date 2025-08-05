@@ -1,3 +1,4 @@
+using Aegis.Cli.Commands;
 using Aegis.Cli.Exceptions.Options;
 using Aegis.Cli.Options.Abstract;
 using Aegis.Cli.Options.Collection;

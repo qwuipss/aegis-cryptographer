@@ -1,6 +1,8 @@
+using System.Collections.Immutable;
+
 namespace Aegis.Cli.Services.Interaction;
 
 internal interface IConsoleReader
 {
-    string ReadSecret();
+    ImmutableArray<byte> ReadSecret();
 }

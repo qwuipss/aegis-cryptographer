@@ -17,14 +17,14 @@ internal sealed class DecryptCommandParser(ILogger<DecryptCommandParser> logger,
     {
         if (args.Length <= index)
         {
-            throw new CommandNotParsedException();
+            throw new CommandNotRecognizedException();
         }
 
         var token = args[index];
         var command = token switch
         {
             CommandTokens.Common.String.LongToken or CommandTokens.Common.String.ShortToken => GetDecryptStringCommand(args, index + 1),
-            _ => throw new CommandNotParsedException(),
+            _ => throw new CommandNotRecognizedException(),
         };
 
         return command;

@@ -1,12 +1,16 @@
+using System.Collections.Immutable;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Services.Interaction;
 
-internal sealed class ConsoleReader : IConsoleReader
+internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleReader
 {
-    public string ReadSecret()
+    private readonly ILogger<ConsoleReader> _logger = logger;
+
+    public ImmutableArray<byte> ReadSecret()
     {
-        var secret = new StringBuilder();
+        var secret = new List<byte>();
 
         while (true)
         {
@@ -14,22 +18,37 @@ internal sealed class ConsoleReader : IConsoleReader
 
             if (key.Key == ConsoleKey.Enter)
             {
+                Console.WriteLine();
                 break;
             }
 
             if (key.Key == ConsoleKey.Backspace)
             {
-                if (secret.Length > 0)
+                if (secret.Count <= 0)
                 {
-                    secret.Length--;
+                    continue;
                 }
+
+                secret.RemoveAt(secret.Count - 1);
             }
             else
             {
-                secret.Append(key.KeyChar);
+                var c = key.KeyChar;
+                if (char.IsControl(c))
+                {
+                    continue;
+                }
+get rid of list
+                var bytes = Encoding.UTF8.GetBytes([c,]);
+                secret.AddRange(bytes);
             }
         }
 
-        return secret.ToString();
+#if DEBUG
+        _logger.LogDebug("Secret read: {secret}", Encoding.UTF8.GetString(secret.ToArray()));
+#else
+        _logger.LogDebug("Secret read");
+#endif
+        return [..secret,];
     }
 }

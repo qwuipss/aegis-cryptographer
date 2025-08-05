@@ -11,7 +11,7 @@ internal sealed class DecryptStringCommand(ILogger<DecryptStringCommand> logger,
 
     public override void Validate()
     {
-        Parameters.ShouldContainSingleParameter();
+        Parameters.ShouldNotContainParameters();
     }
 
     public override Task ExecuteAsync()

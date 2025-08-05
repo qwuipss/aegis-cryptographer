@@ -1,4 +1,3 @@
-using Aegis.Cli.Options;
 using Aegis.Cli.Options.Abstract;
 
 namespace Aegis.Cli.Exceptions.Options;
