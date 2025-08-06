@@ -2,7 +2,7 @@ using Aegis.Cli.Exceptions.Algorithms;
 using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
 using Aegis.Core.Algorithms;
-using Aegis.Core.Algorithms.Aes0;
+using Aegis.Core.Algorithms.AesGcm;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Services.Algorithms;
@@ -17,7 +17,7 @@ internal sealed class AlgorithmResolver(ILogger<AlgorithmResolver> logger, ILogg
     {
         var algorithm = token switch
         {
-            AlgorithmTokens.Aes.Medium => CreateAes0MAlgorithm(),
+            AlgorithmTokens.AesGcm => CreateAesGcmAlgorithm(),
             _ => throw new AlgorithmNotResolvedException(token),
         };
 
@@ -26,10 +26,10 @@ internal sealed class AlgorithmResolver(ILogger<AlgorithmResolver> logger, ILogg
         return algorithm;
     }
 
-    private Aes0MediumAlgorithm CreateAes0MAlgorithm()
+    private AesGcmAlgorithm CreateAesGcmAlgorithm()
     {
         _inlineLogger.LogInformation("Enter secret: ");
         var secret = _consoleReader.ReadSecret();
-        return new Aes0MediumAlgorithm();
+        return new AesGcmAlgorithm(secret);
     }
 }

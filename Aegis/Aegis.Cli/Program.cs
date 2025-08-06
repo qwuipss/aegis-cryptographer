@@ -10,7 +10,7 @@ internal static class Program
     {
         var services = new ServiceCollection();
 
-        GlobalsSetup.SetupUtilityGlobals();
+        Globals.Setup();
 
         services
             .SetupUtilityLogging()

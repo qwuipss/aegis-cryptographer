@@ -38,14 +38,14 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
                 {
                     continue;
                 }
-get rid of list
-                var bytes = Encoding.UTF8.GetBytes([c,]);
+
+                var bytes = Globals.ConsoleEncoding.GetBytes([c,]);
                 secret.AddRange(bytes);
             }
         }
 
 #if DEBUG
-        _logger.LogDebug("Secret read: {secret}", Encoding.UTF8.GetString(secret.ToArray()));
+        _logger.LogDebug("Secret read: {secret}", Globals.ConsoleEncoding.GetString(secret.ToArray()));
 #else
         _logger.LogDebug("Secret read");
 #endif

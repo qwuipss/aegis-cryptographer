@@ -23,7 +23,7 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
 
     public override Task ExecuteAsync()
     {
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Aes.Medium;
+        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.AesGcm;
         var algorithm = _algorithmResolver.Resolve(algorithmToken);
         
         
