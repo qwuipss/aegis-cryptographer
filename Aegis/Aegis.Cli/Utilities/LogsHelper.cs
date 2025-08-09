@@ -8,7 +8,7 @@ internal static class LogsHelper
         Path.Join(GetLogsDirectoryPath(), GetLogFileName());
 
     public static string GetLogFileName() =>
-        $"{AppContext.GetData(Globals.ExecutionId)}.{LogFileExtension}";
+        $"{Globals.ExecutionId}.{LogFileExtension}";
 
     public static string GetLogsDirectoryPath() =>
         Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aegis", "logs");

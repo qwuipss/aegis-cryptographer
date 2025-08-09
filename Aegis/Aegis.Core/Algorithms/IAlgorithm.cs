@@ -2,7 +2,7 @@ namespace Aegis.Core.Algorithms;
 
 public interface IAlgorithm
 {
-    Task<byte[]> Encrypt(Stream readStream);
+    Task EncryptAsync(Stream readStream, Stream writeStream);
 
-    Task<byte[]> Decrypt(Stream readStream);
+    Task DecryptAsync(Stream readStream, Stream writeStream);
 }

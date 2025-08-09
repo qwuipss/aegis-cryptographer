@@ -21,14 +21,17 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
         Options.ShouldContainOnlyOptions<AlgorithmOption>();
     }
 
-    public override Task ExecuteAsync()
+    public override async Task ExecuteAsync()
     {
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.AesGcm;
+        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Rune;
         var algorithm = _algorithmResolver.Resolve(algorithmToken);
+
+        var x = Globals.ConsoleEncoding.GetBytes("hello world");
+        var w = new MemoryStream();
+        await algorithm.EncryptAsync(new MemoryStream(x), w);
         
+        var t = w.ToArray();
         
-        
-        _secretLogger.LogInformation("Encrypted string: {value}", algorithm);
-        return Task.CompletedTask;
+        _secretLogger.LogInformation("Encrypted string: {value}", Convert.ToBase64String(t));
     }
 }

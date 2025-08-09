@@ -37,7 +37,7 @@ internal sealed class Runner(
             _logger.LogError(exc, "An unhandled error occured while running command");
         }
 
-        _logger.LogInformation("Execution id: {executionId}", AppContext.GetData(Globals.ExecutionId));
+        _logger.LogInformation("Execution id: {executionId}", Globals.ExecutionId);
 
         // return;
 

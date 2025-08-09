@@ -2,5 +2,5 @@ namespace Aegis.Cli.Services.Algorithms;
 
 internal static class AlgorithmTokens
 {
-    public const string AesGcm = "aesgcm";
+    public const string Rune = "rune";
 }
