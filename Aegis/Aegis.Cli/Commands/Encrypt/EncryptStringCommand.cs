@@ -8,7 +8,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Commands.Encrypt;
 
-internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger, ILogger<SecretLogger> secretLogger, IAlgorithmResolver algorithmResolver)
+internal sealed class EncryptStringCommand(
+    ILogger<EncryptStringCommand> logger,
+    ILogger<SecretLogger> secretLogger,
+    IAlgorithmResolver algorithmResolver
+)
     : BaseCommand(logger)
 {
     private readonly ILogger<EncryptStringCommand> _logger = logger;
@@ -29,9 +33,9 @@ internal sealed class EncryptStringCommand(ILogger<EncryptStringCommand> logger,
         var x = Globals.ConsoleEncoding.GetBytes("hello world");
         var w = new MemoryStream();
         await algorithm.EncryptAsync(new MemoryStream(x), w);
-        
+
         var t = w.ToArray();
-        
+
         _secretLogger.LogInformation("Encrypted string: {value}", Convert.ToBase64String(t));
     }
 }

@@ -19,5 +19,10 @@ public abstract class BaseAlgorithm : IAlgorithm
         {
             throw new InappropriateStreamException(nameof(writeStream));
         }
+
+        if (readStream.Length is 0)
+        {
+            throw new UnexpectedEndOfStreamException(nameof(readStream));
+        }
     }
 }

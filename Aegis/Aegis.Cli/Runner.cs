@@ -28,7 +28,7 @@ internal sealed class Runner(
 
             await command.ExecuteAsync();
         }
-        catch (IntentionalException exc)
+        catch (IntentionalCliException exc)
         {
             _logger.LogError(exc, "{message}", exc.Message);
         }

@@ -1,5 +1,5 @@
 namespace Aegis.Cli.Exceptions.Parsers.Options;
 
-internal sealed class OptionNotRecognizedException(string option) : IntentionalException($"Unable to parse option '{option}'. Option is not recognized")
+internal sealed class OptionNotRecognizedException(string option) : IntentionalCliException($"Unable to parse option '{option}'. Option is not recognized")
 {
 }

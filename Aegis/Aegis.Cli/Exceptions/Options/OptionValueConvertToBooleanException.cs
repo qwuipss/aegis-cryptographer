@@ -1,6 +1,6 @@
 namespace Aegis.Cli.Exceptions.Options;
 
-internal sealed class OptionValueConvertToBooleanException(string value) : IntentionalException($"Unable to convert '{value}' to a boolean")
+internal sealed class OptionValueConvertToBooleanException(string value) : IntentionalCliException($"Unable to convert '{value}' to a boolean")
 {
     
 }
