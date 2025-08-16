@@ -28,17 +28,16 @@ public sealed class RuneAlgorithm(ImmutableArray<byte> secret, ICryptoService cr
     {
         ValidateStreamProperties(readStream, writeStream);
 
-        var salt = _cryptoService.GetRandomBytes(SaltSizeBytes);
-        var nonce = _cryptoService.GetRandomBytes(NonceSizeBytes);
-
-        var remainLength = readStream.Length - readStream.Position;
-        if (remainLength is 0)
+        if (readStream.Length is 0)
         {
             throw new UnexpectedEndOfStreamException(nameof(readStream));
         }
 
-        var plainText = remainLength > BlockSizeBytes ? new byte[BlockSizeBytes] : new byte[readStream.Length];
+        var salt = _cryptoService.GetRandomBytes(SaltSizeBytes);
+        var nonce = _cryptoService.GetRandomBytes(NonceSizeBytes);
         var tag = new byte[TagSizeBytes];
+        var plainText = readStream.Length > BlockSizeBytes ?  new byte[BlockSizeBytes] : new byte[readStream.Length];
+        var cipherText = new byte[plainText.Length];
 
         await writeStream.WriteAsync(salt);
         await writeStream.WriteAsync(nonce);
@@ -49,17 +48,23 @@ public sealed class RuneAlgorithm(ImmutableArray<byte> secret, ICryptoService cr
         while (true)
         {
             var bytesRead = await readStream.ReadAsync(plainText);
-            if (bytesRead is 0)
+            var isFullBlockRead = bytesRead == plainText.Length;
+            if (isFullBlockRead)
+            {
+                aesGcm.Encrypt(nonce, plainText, cipherText, tag);
+            }
+            else
+            {
+                aesGcm.Encrypt(nonce, plainText.AsSpan(..bytesRead), cipherText.AsSpan(..bytesRead), tag);
+            }
+
+            await writeStream.WriteAsync(tag);
+            await writeStream.WriteAsync(isFullBlockRead ? cipherText : cipherText.AsMemory(..bytesRead));
+
+            if (readStream.Position == readStream.Length)
             {
                 break;
             }
-
-            plainText = plainText[..bytesRead];
-            var cipherText = new byte[plainText.Length];
-            aesGcm.Encrypt(nonce, plainText, cipherText, tag);
-
-            await writeStream.WriteAsync(tag);
-            await writeStream.WriteAsync(cipherText.AsMemory(0, bytesRead));
 
             IncrementNonce(nonce);
         }
@@ -69,49 +74,53 @@ public sealed class RuneAlgorithm(ImmutableArray<byte> secret, ICryptoService cr
     {
         ValidateStreamProperties(readStream, writeStream);
 
+        const int readStreamMinLength = SaltSizeBytes + NonceSizeBytes + TagSizeBytes;
+        if (readStream.Length <= readStreamMinLength)
+        {
+            throw new UnexpectedEndOfStreamException(nameof(readStream));
+        }
+
         var salt = new byte[SaltSizeBytes];
-        var bytesRead = await readStream.ReadAsync(salt);
-
-        if (bytesRead < SaltSizeBytes)
-        {
-            throw new Exception();
-        }
-
-        var key = GetKey(salt);
         var nonce = new byte[NonceSizeBytes];
-
-        bytesRead = await readStream.ReadAsync(nonce);
-        if (bytesRead < NonceSizeBytes)
-        {
-            throw new Exception();
-        }
-
-        var cipherText = new byte[BlockSizeBytes];
+        var remainLength = readStream.Length - readStreamMinLength;
+        var cipherText = remainLength > BlockSizeBytes ? new byte[BlockSizeBytes] : new byte[remainLength];
+        var plainText = new byte[cipherText.Length];
         var tag = new byte[TagSizeBytes];
 
+        await readStream.ReadExactlyAsync(salt);
+        await readStream.ReadExactlyAsync(nonce);
+
+        var key = GetKey(salt);
         using var aesGcm = new AesGcm(key, TagSizeBytes);
 
         while (true)
         {
-            bytesRead = await readStream.ReadAsync(tag);
-            if (bytesRead is not TagSizeBytes)
+            await readStream.ReadExactlyAsync(tag);
+
+            var bytesRead = await readStream.ReadAsync(cipherText);
+            var isFullBlockRead = bytesRead == plainText.Length;
+            if (isFullBlockRead)
             {
-                throw new Exception();
+                aesGcm.Decrypt(nonce, cipherText, tag, plainText);
+            }
+            else
+            {
+                aesGcm.Decrypt(nonce, cipherText.AsSpan(..bytesRead), tag, plainText.AsSpan(..bytesRead));
             }
 
-            bytesRead = await readStream.ReadAsync(cipherText.AsMemory(0, bytesRead));
-            if (bytesRead is 0)
+            await writeStream.WriteAsync(isFullBlockRead ? plainText : plainText.AsMemory(0, bytesRead));
+
+            if (readStream.Position == readStream.Length)
             {
                 break;
             }
 
-            var plainText = new byte[bytesRead];
-            cipherText = cipherText[..bytesRead];
-            aesGcm.Decrypt(nonce, cipherText, tag, plainText);
+            if (readStream.Length - readStream.Position < TagSizeBytes)
+            {
+                throw new UnexpectedEndOfStreamException(nameof(readStream));
+            }
 
-            await writeStream.WriteAsync(cipherText.AsMemory(0, bytesRead));
-
-            DecrementNonce(nonce);
+            IncrementNonce(nonce);
         }
     }
 
@@ -120,17 +129,6 @@ public sealed class RuneAlgorithm(ImmutableArray<byte> secret, ICryptoService cr
         for (var i = nonce.Length - 1; i >= 0; i--)
         {
             if (++nonce[i] is not 0)
-            {
-                break;
-            }
-        }
-    }
-
-    private static void DecrementNonce(byte[] nonce)
-    {
-        for (var i = nonce.Length - 1; i >= 0; i--)
-        {
-            if (nonce[i]-- is not 0)
             {
                 break;
             }

@@ -1,5 +1,7 @@
+using System.Text;
 using Aegis.Core.Algorithms;
-using NUnit.Framework;
+using Aegis.Core.Services;
+using FluentAssertions;
 
 namespace Aegis.Core.Tests.Algorithms;
 
@@ -7,21 +9,24 @@ namespace Aegis.Core.Tests.Algorithms;
 public sealed class RuneAlgorithm_Tests
 {
     [Test]
-    public async Task Encrypt()
+    public async Task AS()
     {
-        var algorithm = new RuneAlgorithm([.."secret"u8.ToArray(),]);
+        var algorithm = new RuneAlgorithm([.."secret"u8.ToArray(),], new CryptoService());
 
-        var message = "baobab"u8;
+        var message = new byte[1024 * 1024 * 6];
+        Random.Shared.NextBytes(message);
         var readStream = new MemoryStream([..message.ToArray(),]);
         var writeStream = new MemoryStream();
 
         await algorithm.EncryptAsync(readStream, writeStream);
 
         (readStream, writeStream) = (writeStream, readStream);
-Console.WriteLine();
         readStream.Position = 0;
         writeStream.Position = 0;
-        
+
         await algorithm.DecryptAsync(readStream, writeStream);
+
+        var decryptedMessage = writeStream.ToArray();
+        decryptedMessage.Should().Equal(message);
     }
 }

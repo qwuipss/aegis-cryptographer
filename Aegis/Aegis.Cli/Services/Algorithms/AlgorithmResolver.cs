@@ -2,14 +2,21 @@ using Aegis.Cli.Exceptions.Algorithms;
 using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
 using Aegis.Core.Algorithms;
+using Aegis.Core.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Services.Algorithms;
 
-internal sealed class AlgorithmResolver(ILogger<AlgorithmResolver> logger, ILogger<InlineLogger> inlineLogger, IConsoleReader consoleReader) : IAlgorithmResolver
+internal sealed class AlgorithmResolver(
+    ILogger<AlgorithmResolver> logger,
+    ILogger<InlineLogger> inlineLogger,
+    ICryptoService cryptoService,
+    IConsoleReader consoleReader
+) : IAlgorithmResolver
 {
     private readonly ILogger<AlgorithmResolver> _logger = logger;
     private readonly ILogger<InlineLogger> _inlineLogger = inlineLogger;
+    private readonly ICryptoService _cryptoService = cryptoService;
     private readonly IConsoleReader _consoleReader = consoleReader;
 
     public IAlgorithm Resolve(string token)
@@ -29,6 +36,6 @@ internal sealed class AlgorithmResolver(ILogger<AlgorithmResolver> logger, ILogg
     {
         _inlineLogger.LogInformation("Enter secret: ");
         var secret = _consoleReader.ReadSecret();
-        return new RuneAlgorithm(secret);
+        return new RuneAlgorithm(secret, cryptoService);
     }
 }
