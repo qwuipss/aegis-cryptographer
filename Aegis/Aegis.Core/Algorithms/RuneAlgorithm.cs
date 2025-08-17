@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Immutable;
 using System.Security.Cryptography;
 using Aegis.Core.Exceptions.Algorithms;
@@ -35,38 +36,42 @@ public sealed class RuneAlgorithm(ImmutableArray<byte> secret, ICryptoService cr
 
         var salt = _cryptoService.GetRandomBytes(SaltSizeBytes);
         var nonce = _cryptoService.GetRandomBytes(NonceSizeBytes);
-        var tag = new byte[TagSizeBytes];
-        var plainText = readStream.Length > BlockSizeBytes ?  new byte[BlockSizeBytes] : new byte[readStream.Length];
-        var cipherText = new byte[plainText.Length];
 
         await writeStream.WriteAsync(salt);
         await writeStream.WriteAsync(nonce);
 
+        var tag = new byte[TagSizeBytes];
+        var bufferLength = readStream.Length > BlockSizeBytes ? BlockSizeBytes : (int)readStream.Length;
         var key = GetKey(salt);
         using var aesGcm = new AesGcm(key, TagSizeBytes);
 
-        while (true)
+        byte[] plainText = null!;
+        byte[] cipherText = null!;
+        try
         {
-            var bytesRead = await readStream.ReadAsync(plainText);
-            var isFullBlockRead = bytesRead == plainText.Length;
-            if (isFullBlockRead)
+            plainText = ArrayPool<byte>.Shared.Rent(bufferLength);
+            cipherText = ArrayPool<byte>.Shared.Rent(bufferLength);
+
+            while (true)
             {
-                aesGcm.Encrypt(nonce, plainText, cipherText, tag);
-            }
-            else
-            {
+                var bytesRead = await readStream.ReadAsync(plainText.AsMemory(..bufferLength));
                 aesGcm.Encrypt(nonce, plainText.AsSpan(..bytesRead), cipherText.AsSpan(..bytesRead), tag);
+
+                await writeStream.WriteAsync(tag);
+                await writeStream.WriteAsync(cipherText.AsMemory(..bytesRead));
+
+                if (readStream.Position == readStream.Length)
+                {
+                    break;
+                }
+
+                IncrementNonce(nonce);
             }
-
-            await writeStream.WriteAsync(tag);
-            await writeStream.WriteAsync(isFullBlockRead ? cipherText : cipherText.AsMemory(..bytesRead));
-
-            if (readStream.Position == readStream.Length)
-            {
-                break;
-            }
-
-            IncrementNonce(nonce);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(plainText);
+            ArrayPool<byte>.Shared.Return(cipherText);
         }
     }
 
@@ -82,45 +87,49 @@ public sealed class RuneAlgorithm(ImmutableArray<byte> secret, ICryptoService cr
 
         var salt = new byte[SaltSizeBytes];
         var nonce = new byte[NonceSizeBytes];
-        var remainLength = readStream.Length - readStreamMinLength;
-        var cipherText = remainLength > BlockSizeBytes ? new byte[BlockSizeBytes] : new byte[remainLength];
-        var plainText = new byte[cipherText.Length];
-        var tag = new byte[TagSizeBytes];
 
         await readStream.ReadExactlyAsync(salt);
         await readStream.ReadExactlyAsync(nonce);
 
+        var remainLength = readStream.Length - readStreamMinLength;
+        var bufferLength = remainLength > BlockSizeBytes ? BlockSizeBytes : (int)remainLength;
+        var tag = new byte[TagSizeBytes];
         var key = GetKey(salt);
         using var aesGcm = new AesGcm(key, TagSizeBytes);
 
-        while (true)
+        byte[] cipherText = null!;
+        byte[] plainText = null!;
+        try
         {
-            await readStream.ReadExactlyAsync(tag);
+            cipherText = ArrayPool<byte>.Shared.Rent(bufferLength);
+            plainText = ArrayPool<byte>.Shared.Rent(bufferLength);
 
-            var bytesRead = await readStream.ReadAsync(cipherText);
-            var isFullBlockRead = bytesRead == plainText.Length;
-            if (isFullBlockRead)
+            while (true)
             {
-                aesGcm.Decrypt(nonce, cipherText, tag, plainText);
-            }
-            else
-            {
+                await readStream.ReadExactlyAsync(tag);
+
+                var bytesRead = await readStream.ReadAsync(cipherText.AsMemory(..bufferLength));
                 aesGcm.Decrypt(nonce, cipherText.AsSpan(..bytesRead), tag, plainText.AsSpan(..bytesRead));
+
+                await writeStream.WriteAsync(plainText.AsMemory(..bytesRead));
+
+                if (readStream.Position == readStream.Length)
+                {
+                    break;
+                }
+
+                if (readStream.Length - readStream.Position < TagSizeBytes)
+                {
+                    throw new UnexpectedEndOfStreamException(nameof(readStream));
+                }
+
+                IncrementNonce(nonce);
             }
-
-            await writeStream.WriteAsync(isFullBlockRead ? plainText : plainText.AsMemory(0, bytesRead));
-
-            if (readStream.Position == readStream.Length)
-            {
-                break;
-            }
-
-            if (readStream.Length - readStream.Position < TagSizeBytes)
-            {
-                throw new UnexpectedEndOfStreamException(nameof(readStream));
-            }
-
-            IncrementNonce(nonce);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(cipherText);
+            ArrayPool<byte>.Shared.Return(plainText);
         }
     }
 
