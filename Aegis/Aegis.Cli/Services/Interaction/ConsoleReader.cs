@@ -8,7 +8,7 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
 {
     private readonly ILogger<ConsoleReader> _logger = logger;
 
-    public ImmutableArray<byte> ReadSecret()
+    public byte[] ReadSecret()
     {
         var secret = new List<byte>();
 

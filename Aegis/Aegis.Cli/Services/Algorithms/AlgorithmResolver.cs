@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Aegis.Cli.Exceptions.Algorithms;
 using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
@@ -36,6 +37,6 @@ internal sealed class AlgorithmResolver(
     {
         _inlineLogger.LogInformation("Enter secret: ");
         var secret = _consoleReader.ReadSecret();
-        return new RuneAlgorithm(secret, cryptoService);
+        return new RuneAlgorithm([..secret], _cryptoService);
     }
 }

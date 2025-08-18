@@ -1,6 +1,8 @@
+using System.Text;
 using Aegis.Cli.Extensions;
 using Aegis.Cli.Options.Concrete;
 using Aegis.Cli.Services.Algorithms;
+using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
 using Aegis.Core.Algorithms;
 using Microsoft.Extensions.Logging;
@@ -10,12 +12,14 @@ namespace Aegis.Cli.Commands.Decrypt;
 internal sealed class DecryptStringCommand(
     ILogger<DecryptStringCommand> logger,
     ILogger<SecretLogger> secretLogger,
-    IAlgorithmResolver algorithmResolver
+    IAlgorithmResolver algorithmResolver,
+    IConsoleReader consoleReader
 )
     : BaseCommand(logger)
 {
     private readonly ILogger<SecretLogger> _secretLogger = secretLogger;
     private readonly IAlgorithmResolver _algorithmResolver = algorithmResolver;
+    private readonly IConsoleReader _consoleReader = consoleReader;
 
     public override void Validate()
     {
@@ -27,13 +31,15 @@ internal sealed class DecryptStringCommand(
     {
         var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Rune;
         var algorithm = _algorithmResolver.Resolve(algorithmToken);
+        var messageToDecrypt = _consoleReader.ReadSecret();
+        // var base64MessageToDecrypt = Convert.Base(messageToDecrypt);
+        var readStream = new MemoryStream(messageToDecrypt);
+        var writeStream = new MemoryStream();
 
-        var r = Convert.FromBase64String("fBzyhri96/8r5CPG2uLkTMKQibDXifecnJi82UhjHYCxl8HGNTkYFJX3UIc3PY23MbVgYg+a9w==");
-        var w = new MemoryStream();
-        await algorithm.DecryptAsync(new MemoryStream(r), w);
+        await algorithm.DecryptAsync(readStream, writeStream);
 
-        var t = w.ToArray();
+        var decryptedMessage = Globals.ConsoleEncoding.GetString(writeStream.ToArray());
 
-        _secretLogger.LogInformation("Decrypted string: {value}", Globals.ConsoleEncoding.GetString(t));
+        _secretLogger.LogInformation("Decrypted string: {value}", decryptedMessage);
     }
 }
