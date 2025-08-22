@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
@@ -8,9 +7,9 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
 {
     private readonly ILogger<ConsoleReader> _logger = logger;
 
-    public byte[] ReadSecret()
+    public string ReadSecret()
     {
-        var secret = new List<byte>();
+        var secret = new StringBuilder();
 
         while (true)
         {
@@ -18,18 +17,17 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
 
             if (key.Key == ConsoleKey.Enter)
             {
-                Console.WriteLine();
                 break;
             }
 
             if (key.Key == ConsoleKey.Backspace)
             {
-                if (secret.Count <= 0)
+                if (secret.Length == 0)
                 {
                     continue;
                 }
 
-                secret.RemoveAt(secret.Count - 1);
+                secret.Length -= 1;
             }
             else
             {
@@ -38,17 +36,18 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
                 {
                     continue;
                 }
-
-                var bytes = Globals.ConsoleEncoding.GetBytes([c,]);
-                secret.AddRange(bytes);
+                
+                secret.Append(c);
             }
         }
 
+        var secretString = secret.ToString();
+        
 #if DEBUG
-        _logger.LogDebug("Secret read: {secret}", Globals.ConsoleEncoding.GetString(secret.ToArray()));
+        _logger.LogDebug("Secret read: {secret}", secretString);
 #else
         _logger.LogDebug("Secret read");
 #endif
-        return [..secret,];
+        return secretString;
     }
 }

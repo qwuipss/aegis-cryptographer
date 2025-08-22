@@ -5,8 +5,7 @@ using NSubstitute;
 
 namespace Aegis.Core.Tests.Algorithms;
 
-[TestFixture]
-public sealed class RuneAlgorithm_Tests
+internal sealed class RuneAlgorithm_Tests
 {
     private ICryptoService _cryptoService;
 
