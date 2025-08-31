@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Aegis.Cli.Exceptions.Algorithms;
+using Aegis.Cli.Extensions;
 using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
 using Aegis.Core.Algorithms;
@@ -22,9 +23,12 @@ internal sealed class AlgorithmResolver(
 
     public IAlgorithm Resolve(string token)
     {
+        
+        
         var algorithm = token switch
         {
-            AlgorithmTokens.Rune => CreateAesGcmAlgorithm(),
+            _ when token.Equals(nameof(Algorithm.Rune), StringComparison.InvariantCultureIgnoreCase) =>
+                CreateAesGcmAlgorithm(),
             _ => throw new AlgorithmNotResolvedException(token),
         };
 
@@ -37,6 +41,6 @@ internal sealed class AlgorithmResolver(
     {
         _inlineLogger.LogInformation("Enter secret: ");
         var secret = _consoleReader.ReadSecret();
-        return new RuneAlgorithm([..secret], _cryptoService);
+        return new RuneAlgorithm([..secret.ToGlobalEncodingBytes(),], _cryptoService);
     }
 }

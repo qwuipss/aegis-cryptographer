@@ -29,17 +29,18 @@ internal sealed class DecryptStringCommand(
 
     public override async Task ExecuteAsync()
     {
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Rune;
+        var strToDecrypt = _consoleReader.ReadSecret();
+        var 
+        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value;
         var algorithm = _algorithmResolver.Resolve(algorithmToken);
-        var messageToDecrypt = _consoleReader.ReadSecret();
-        // var base64MessageToDecrypt = Convert.Base(messageToDecrypt);
-        var readStream = new MemoryStream(messageToDecrypt);
+        var readStream = strToDecrypt.ToGlobalEncodingMemoryStream();
+
         var writeStream = new MemoryStream();
 
         await algorithm.DecryptAsync(readStream, writeStream);
 
-        var decryptedMessage = Globals.ConsoleEncoding.GetString(writeStream.ToArray());
+        var decryptedStr = Globals.ConsoleEncoding.GetString(writeStream.ToArray());
 
-        _secretLogger.LogInformation("Decrypted string: {value}", decryptedMessage);
+        _secretLogger.LogInformation("Decrypted string: {value}", decryptedStr);
     }
 }

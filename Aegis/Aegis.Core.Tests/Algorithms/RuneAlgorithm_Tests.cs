@@ -52,14 +52,14 @@ internal sealed class RuneAlgorithm_Tests
     [TestCase(3_500_000)]
     [TestCase(8_500_100)]
     [TestCase(16_000_000)]
-    public async Task Should_correctly_encrypt_and_decrypt(int messageSize)
+    public async Task Should_correctly_encrypt_and_decrypt(int stringSize)
     {
         var random = new Random(1);
         var algorithm = new RuneAlgorithm([], _cryptoService);
-        var messageToEncrypt = new byte[messageSize];
-        random.NextBytes(messageToEncrypt);
+        var stringToEncrypt = new byte[stringSize];
+        random.NextBytes(stringToEncrypt);
 
-        var readStream = new MemoryStream(messageToEncrypt);
+        var readStream = new MemoryStream(stringToEncrypt);
         var writeStream = new MemoryStream();
 
         await algorithm.EncryptAsync(readStream, writeStream);
@@ -69,8 +69,8 @@ internal sealed class RuneAlgorithm_Tests
 
         await algorithm.DecryptAsync(readStream, writeStream);
 
-        var decryptedMessage = writeStream.ToArray();
-        decryptedMessage.Should().Equal(messageToEncrypt);
+        var decryptedString = writeStream.ToArray();
+        decryptedString.Should().Equal(stringToEncrypt);
     }
 
     [TestCase(
@@ -108,17 +108,17 @@ internal sealed class RuneAlgorithm_Tests
             231, 160, 210, 119, 88, 66, 20, 37, 203, 151
         }
     )]
-    public async Task Should_correctly_encrypt(byte[] messageToEncrypt, byte[] expectedEncryptedMessage)
+    public async Task Should_correctly_encrypt(byte[] stringToEncrypt, byte[] expectedEncryptedString)
     {
         var algorithm = new RuneAlgorithm([], _cryptoService);
 
-        var readStream = new MemoryStream(messageToEncrypt);
+        var readStream = new MemoryStream(stringToEncrypt);
         var writeStream = new MemoryStream();
 
         await algorithm.EncryptAsync(readStream, writeStream);
 
-        var encryptedMessage = writeStream.ToArray();
-        encryptedMessage.Should().Equal(expectedEncryptedMessage);
+        var encryptedString = writeStream.ToArray();
+        encryptedString.Should().Equal(expectedEncryptedString);
     }
 
     [TestCase(
@@ -156,16 +156,16 @@ internal sealed class RuneAlgorithm_Tests
             231, 160, 210, 119, 88, 66, 20, 37, 203, 151
         }
     )]
-    public async Task Should_correctly_decrypt(byte[] expectedDecryptedMessage, byte[] encryptedMessage)
+    public async Task Should_correctly_decrypt(byte[] expectedDecryptedString, byte[] encryptedString)
     {
         var algorithm = new RuneAlgorithm([], _cryptoService);
 
-        var readStream = new MemoryStream(encryptedMessage);
+        var readStream = new MemoryStream(encryptedString);
         var writeStream = new MemoryStream();
 
         await algorithm.DecryptAsync(readStream, writeStream);
 
-        var decryptedMessage = writeStream.ToArray();
-        decryptedMessage.Should().Equal(expectedDecryptedMessage);
+        var decryptedString = writeStream.ToArray();
+        decryptedString.Should().Equal(expectedDecryptedString);
     }
 }

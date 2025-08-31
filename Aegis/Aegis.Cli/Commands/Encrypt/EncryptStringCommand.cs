@@ -1,8 +1,7 @@
 using Aegis.Cli.Extensions;
-using Aegis.Cli.Options;
-using Aegis.Cli.Options.Abstract;
 using Aegis.Cli.Options.Concrete;
 using Aegis.Cli.Services.Algorithms;
+using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -11,13 +10,14 @@ namespace Aegis.Cli.Commands.Encrypt;
 internal sealed class EncryptStringCommand(
     ILogger<EncryptStringCommand> logger,
     ILogger<SecretLogger> secretLogger,
-    IAlgorithmResolver algorithmResolver
+    IAlgorithmResolver algorithmResolver,
+    IConsoleReader consoleReader
 )
     : BaseCommand(logger)
 {
-    private readonly ILogger<EncryptStringCommand> _logger = logger;
     private readonly ILogger<SecretLogger> _secretLogger = secretLogger;
     private readonly IAlgorithmResolver _algorithmResolver = algorithmResolver;
+    private readonly IConsoleReader _consoleReader = consoleReader;
 
     public override void Validate()
     {
@@ -27,15 +27,19 @@ internal sealed class EncryptStringCommand(
 
     public override async Task ExecuteAsync()
     {
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? AlgorithmTokens.Rune;
+        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? nameof(Algorithm.Rune);
         var algorithm = _algorithmResolver.Resolve(algorithmToken);
 
-        var x = Globals.ConsoleEncoding.GetBytes("hello world");
-        var w = new MemoryStream();
-        await algorithm.EncryptAsync(new MemoryStream(x), w);
+        var stringToEncrypt = _consoleReader.ReadSecret();
+        var readStream = stringToEncrypt.ToGlobalEncodingMemoryStream();
+        var writeStream = new MemoryStream();
 
-        var t = w.ToArray();
+        await writeStream.WriteAsync([])
+        await algorithm.EncryptAsync(readStream, writeStream);
 
-        _secretLogger.LogInformation("Encrypted string: {value}", Convert.ToBase64String(t));
+        var encryptedStrBytes = writeStream.ToArray();
+        var encryptedBase64Str = Convert.ToBase64String(encryptedStrBytes);
+
+        _secretLogger.LogInformation("Encrypted string: {value}", encryptedBase64Str);
     }
 }
