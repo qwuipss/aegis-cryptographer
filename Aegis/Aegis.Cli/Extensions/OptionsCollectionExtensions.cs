@@ -1,11 +1,10 @@
-using Aegis.Cli.Commands;
 using Aegis.Cli.Exceptions.Options;
 using Aegis.Cli.Options.Abstract;
 using Aegis.Cli.Options.Collection;
 
 namespace Aegis.Cli.Extensions;
 
-internal static class OptionExtensions
+internal static class OptionsCollectionExtensions
 {
     public static void ShouldContainOnlyOptions<T1>(this IOptionsCollection options)
         where T1 : class, IOption
@@ -15,6 +14,17 @@ internal static class OptionExtensions
 
     private static void ShouldContainOnlyOptions(this IOptionsCollection options, params Type[] optionTypes)
     {
+        foreach (var optionType in optionTypes)
+        {
+            if (!optionType.IsAssignableFrom(typeof(IOption)))
+            {
+                throw new ArgumentException(
+                    $"Option type '{optionType.Name}' should be assignable from '{nameof(IOption)}'",
+                    nameof(optionTypes)
+                );
+            }
+        }
+
         var keysSet = new HashSet<Type>(optionTypes);
         foreach (var option in options)
         {

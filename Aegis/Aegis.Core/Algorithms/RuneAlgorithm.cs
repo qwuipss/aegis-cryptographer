@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Security.Cryptography;
 using Aegis.Core.Exceptions.Algorithms;
 using Aegis.Core.Services;
-using Konscious.Security.Cryptography;
 
 namespace Aegis.Core.Algorithms;
 

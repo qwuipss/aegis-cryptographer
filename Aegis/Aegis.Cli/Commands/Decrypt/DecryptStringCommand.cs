@@ -12,13 +12,13 @@ namespace Aegis.Cli.Commands.Decrypt;
 internal sealed class DecryptStringCommand(
     ILogger<DecryptStringCommand> logger,
     ILogger<SecretLogger> secretLogger,
-    IAlgorithmResolver algorithmResolver,
+    IAlgorithmFactory algorithmFactory,
     IConsoleReader consoleReader
 )
     : BaseCommand(logger)
 {
     private readonly ILogger<SecretLogger> _secretLogger = secretLogger;
-    private readonly IAlgorithmResolver _algorithmResolver = algorithmResolver;
+    private readonly IAlgorithmFactory _algorithmFactory = algorithmFactory;
     private readonly IConsoleReader _consoleReader = consoleReader;
 
     public override void Validate()
@@ -30,9 +30,9 @@ internal sealed class DecryptStringCommand(
     public override async Task ExecuteAsync()
     {
         var strToDecrypt = _consoleReader.ReadSecret();
-        var 
+        // var 
         var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value;
-        var algorithm = _algorithmResolver.Resolve(algorithmToken);
+        var algorithm = _algorithmFactory.Create(algorithmToken);
         var readStream = strToDecrypt.ToGlobalEncodingMemoryStream();
 
         var writeStream = new MemoryStream();

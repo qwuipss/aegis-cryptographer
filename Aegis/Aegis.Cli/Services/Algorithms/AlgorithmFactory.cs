@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using Aegis.Cli.Exceptions.Algorithms;
 using Aegis.Cli.Extensions;
 using Aegis.Cli.Services.Interaction;
 using Aegis.Cli.Services.Logging;
@@ -9,27 +8,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Services.Algorithms;
 
-internal sealed class AlgorithmResolver(
-    ILogger<AlgorithmResolver> logger,
+internal sealed class AlgorithmFactory(
+    ILogger<AlgorithmFactory> logger,
     ILogger<InlineLogger> inlineLogger,
     ICryptoService cryptoService,
     IConsoleReader consoleReader
-) : IAlgorithmResolver
+) : IAlgorithmFactory
 {
-    private readonly ILogger<AlgorithmResolver> _logger = logger;
+    private readonly ILogger<AlgorithmFactory> _logger = logger;
     private readonly ILogger<InlineLogger> _inlineLogger = inlineLogger;
     private readonly ICryptoService _cryptoService = cryptoService;
     private readonly IConsoleReader _consoleReader = consoleReader;
 
-    public IAlgorithm Resolve(string token)
+    public IAlgorithm Create(AlgorithmType algorithmType)
     {
-        
-        
-        var algorithm = token switch
+        var algorithm = algorithmType switch
         {
-            _ when token.Equals(nameof(Algorithm.Rune), StringComparison.InvariantCultureIgnoreCase) =>
-                CreateAesGcmAlgorithm(),
-            _ => throw new AlgorithmNotResolvedException(token),
+            AlgorithmType.Rune => CreateRuneAlgorithm(),
+            _ => throw new ArgumentOutOfRangeException(nameof(algorithmType)),
         };
 
         _logger.LogDebug("Resolved algorithm '{algorithm}'", algorithm.GetType().Name);
@@ -37,7 +33,7 @@ internal sealed class AlgorithmResolver(
         return algorithm;
     }
 
-    private RuneAlgorithm CreateAesGcmAlgorithm()
+    private RuneAlgorithm CreateRuneAlgorithm()
     {
         _inlineLogger.LogInformation("Enter secret: ");
         var secret = _consoleReader.ReadSecret();

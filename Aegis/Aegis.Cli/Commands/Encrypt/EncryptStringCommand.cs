@@ -10,13 +10,13 @@ namespace Aegis.Cli.Commands.Encrypt;
 internal sealed class EncryptStringCommand(
     ILogger<EncryptStringCommand> logger,
     ILogger<SecretLogger> secretLogger,
-    IAlgorithmResolver algorithmResolver,
+    IAlgorithmFactory algorithmFactory,
     IConsoleReader consoleReader
 )
     : BaseCommand(logger)
 {
     private readonly ILogger<SecretLogger> _secretLogger = secretLogger;
-    private readonly IAlgorithmResolver _algorithmResolver = algorithmResolver;
+    private readonly IAlgorithmFactory _algorithmFactory = algorithmFactory;
     private readonly IConsoleReader _consoleReader = consoleReader;
 
     public override void Validate()
@@ -27,14 +27,13 @@ internal sealed class EncryptStringCommand(
 
     public override async Task ExecuteAsync()
     {
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value ?? nameof(Algorithm.Rune);
-        var algorithm = _algorithmResolver.Resolve(algorithmToken);
+        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value;
+        var algorithm = _algorithmFactory.Create(algorithmToken);
 
         var stringToEncrypt = _consoleReader.ReadSecret();
         var readStream = stringToEncrypt.ToGlobalEncodingMemoryStream();
-        var writeStream = new MemoryStream();
+        var writeStream = new MemoryStream([1]);
 
-        await writeStream.WriteAsync([])
         await algorithm.EncryptAsync(readStream, writeStream);
 
         var encryptedStrBytes = writeStream.ToArray();

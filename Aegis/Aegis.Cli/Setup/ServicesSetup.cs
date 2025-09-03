@@ -41,7 +41,7 @@ internal static class ServicesSetup
 
     private static IServiceCollection AddAlgorithmServices(this IServiceCollection services)
     {
-        return services.AddSingleton<IAlgorithmResolver, AlgorithmResolver>();
+        return services.AddSingleton<IAlgorithmFactory, AlgorithmFactory>();
     }
 
     private static IServiceCollection AddFileServices(this IServiceCollection services)

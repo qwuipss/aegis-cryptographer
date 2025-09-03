@@ -1,6 +1,6 @@
 namespace Aegis.Cli.Services.Algorithms;
 
-internal enum Algorithm
+internal enum AlgorithmType
 {
-    Rune,
+    Rune = 1,
 }
