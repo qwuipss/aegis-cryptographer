@@ -27,18 +27,18 @@ internal sealed class EncryptStringCommand(
 
     public override async Task ExecuteAsync()
     {
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value;
-        var algorithm = _algorithmFactory.Create(algorithmToken);
-
+        var algorithmType = Options.GetAlgorithmTypeOrDefault();
+        var algorithm = _algorithmFactory.Create(algorithmType);
         var stringToEncrypt = _consoleReader.ReadSecret();
         var readStream = stringToEncrypt.ToGlobalEncodingMemoryStream();
-        var writeStream = new MemoryStream([1]);
+        var algorithmTypeSerialized = BitConverter.GetBytes((int)algorithmType);
+        var writeStream = new MemoryStream(algorithmTypeSerialized);
 
         await algorithm.EncryptAsync(readStream, writeStream);
 
-        var encryptedStrBytes = writeStream.ToArray();
-        var encryptedBase64Str = Convert.ToBase64String(encryptedStrBytes);
+        var encryptedStringBytes = writeStream.ToArray();
+        var encryptedBase64String = Convert.ToBase64String(encryptedStringBytes);
 
-        _secretLogger.LogInformation("Encrypted string: {value}", encryptedBase64Str);
+        _secretLogger.LogInformation("Encrypted string: {value}", encryptedBase64String);
     }
 }

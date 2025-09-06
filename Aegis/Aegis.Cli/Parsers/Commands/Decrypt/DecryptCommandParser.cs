@@ -24,7 +24,7 @@ internal sealed class DecryptCommandParser(ILogger<DecryptCommandParser> logger,
         var command = token switch
         {
             CommandTokens.Common.String.LongToken or CommandTokens.Common.String.ShortToken => GetDecryptStringCommand(args, index + 1),
-            _ => throw new CommandNotRecognizedException(),
+            _ => throw new CommandNotRecognizedException(token),
         };
 
         return command;

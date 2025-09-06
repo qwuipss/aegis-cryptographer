@@ -24,7 +24,7 @@ internal sealed class EncryptCommandParser(ILogger<EncryptCommandParser> logger,
         var command = token switch
         {
             CommandTokens.Common.String.LongToken or CommandTokens.Common.String.ShortToken => GetEncryptStringCommand(args, index + 1),
-            _ => throw new CommandNotRecognizedException(),
+            _ => throw new CommandNotRecognizedException(token),
         };
 
         return command;

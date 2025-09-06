@@ -24,17 +24,19 @@ internal sealed class DecryptStringCommand(
     public override void Validate()
     {
         Parameters.ShouldNotContainParameters();
-        Options.ShouldContainOnlyOptions<AlgorithmOption>();
+        // Options.ShouldContainOnlyOptions<>();
     }
 
     public override async Task ExecuteAsync()
     {
-        var strToDecrypt = _consoleReader.ReadSecret();
-        // var 
-        var algorithmToken = Options.GetOption<AlgorithmOption>()?.Value;
-        var algorithm = _algorithmFactory.Create(algorithmToken);
-        var readStream = strToDecrypt.ToGlobalEncodingMemoryStream();
-
+        var encryptedBase64String = _consoleReader.ReadSecret();
+        var encryptedStringBytes = Convert.FromBase64String(encryptedBase64String);
+        var algorithmTypeSerialized = encryptedStringBytes.AsSpan(0, 4).ToArray();
+        var algorithmType = BitConverter.ToInt32(algorithmTypeSerialized);
+        var algorithm = _algorithmFactory.Create();
+        var readStream = encryptedBase64String.ToGlobalEncodingMemoryStream();
+        
+        
         var writeStream = new MemoryStream();
 
         await algorithm.DecryptAsync(readStream, writeStream);

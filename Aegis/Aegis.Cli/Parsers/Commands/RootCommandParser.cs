@@ -25,7 +25,7 @@ internal sealed class RootCommandParser(ILogger<RootCommandParser> logger, IComm
         {
             CommandTokens.Encrypt.LongToken or CommandTokens.Encrypt.ShortToken => _parserFactory.Create<EncryptCommandParser>(),
             CommandTokens.Decrypt.LongToken or CommandTokens.Decrypt.ShortToken => _parserFactory.Create<DecryptCommandParser>(),
-            _ => throw new CommandNotRecognizedException(),
+            _ => throw new CommandNotRecognizedException(token),
         };
 
         _logger.LogDebug("Resolved parser '{parserType}'", parser.GetType().Name);
