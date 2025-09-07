@@ -10,13 +10,11 @@ namespace Aegis.Cli.Services.Algorithms;
 
 internal sealed class AlgorithmFactory(
     ILogger<AlgorithmFactory> logger,
-    ILogger<InlineLogger> inlineLogger,
     ICryptoService cryptoService,
     IConsoleReader consoleReader
 ) : IAlgorithmFactory
 {
     private readonly ILogger<AlgorithmFactory> _logger = logger;
-    private readonly ILogger<InlineLogger> _inlineLogger = inlineLogger;
     private readonly ICryptoService _cryptoService = cryptoService;
     private readonly IConsoleReader _consoleReader = consoleReader;
 
@@ -35,8 +33,7 @@ internal sealed class AlgorithmFactory(
 
     private RuneAlgorithm CreateRuneAlgorithm()
     {
-        _inlineLogger.LogInformation("Enter secret: ");
-        var secret = _consoleReader.ReadSecret();
+        var secret = _consoleReader.ReadSecret("Enter secret");
         return new RuneAlgorithm([..secret.ToGlobalEncodingBytes(),], _cryptoService);
     }
 }

@@ -6,6 +6,7 @@ using Aegis.Cli.Parsers.Options;
 using Aegis.Cli.Services.Algorithms;
 using Aegis.Cli.Services.Files;
 using Aegis.Cli.Services.Interaction;
+using Aegis.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aegis.Cli.Setup;
@@ -21,9 +22,15 @@ internal static class ServicesSetup
                .AddFileServices()
                .AddOptionsParser()
                .AddCommandParsers()
-               .AddCommands();
+               .AddCommands()
+               .AddCryptoServices();
     }
 
+    private static IServiceCollection AddCryptoServices(this IServiceCollection services)
+    {
+        return services.AddSingleton<ICryptoService, CryptoService>();
+    }
+    
     private static IServiceCollection AddRunner(this IServiceCollection services)
     {
         return services.AddSingleton<IRunner, Runner>();

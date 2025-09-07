@@ -1,15 +1,19 @@
 using System.Text;
+using Aegis.Cli.Services.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Aegis.Cli.Services.Interaction;
 
-internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleReader
+internal sealed class ConsoleReader(ILogger<ConsoleReader> logger, ILogger<InlineLogger> inlineLogger) : IConsoleReader
 {
     private readonly ILogger<ConsoleReader> _logger = logger;
+    private readonly ILogger<InlineLogger> _inlineLogger = inlineLogger;
 
-    public string ReadSecret()
+    public string ReadSecret(string caption)
     {
-        var secret = new StringBuilder();
+        _inlineLogger.LogInformation("{caption}: ", caption);
+
+        var secretBuilder = new StringBuilder();
 
         while (true)
         {
@@ -22,12 +26,12 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
 
             if (key.Key == ConsoleKey.Backspace)
             {
-                if (secret.Length == 0)
+                if (secretBuilder.Length == 0)
                 {
                     continue;
                 }
 
-                secret.Length -= 1;
+                secretBuilder.Length -= 1;
             }
             else
             {
@@ -36,17 +40,17 @@ internal sealed class ConsoleReader(ILogger<ConsoleReader> logger) : IConsoleRea
                 {
                     continue;
                 }
-                
-                secret.Append(c);
+
+                secretBuilder.Append(c);
             }
         }
 
-        var secretString = secret.ToString();
-        
+        var secretString = secretBuilder.ToString();
+
 #if DEBUG
-        _logger.LogDebug("Secret read: {secret}", secretString);
+        _logger.LogDebug("Read: {secret}", secretString);
 #else
-        _logger.LogDebug("Secret read");
+        _logger.LogDebug("Read");
 #endif
         return secretString;
     }

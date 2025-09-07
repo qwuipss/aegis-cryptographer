@@ -41,7 +41,7 @@ internal static class OptionsCollectionExtensions
     {
         foreach (var optionType in optionTypes)
         {
-            if (!optionType.IsAssignableFrom(typeof(IOption)))
+            if (!optionType.IsAssignableTo(typeof(IOption)))
             {
                 throw new ArgumentException(
                     $"Option type '{optionType.Name}' should be assignable from '{nameof(IOption)}'",

@@ -29,10 +29,10 @@ internal sealed class EncryptStringCommand(
     {
         var algorithmType = Options.GetAlgorithmTypeOrDefault();
         var algorithm = _algorithmFactory.Create(algorithmType);
-        var stringToEncrypt = _consoleReader.ReadSecret();
-        var readStream = stringToEncrypt.ToGlobalEncodingMemoryStream();
+        var stringToEncrypt = _consoleReader.ReadSecret("Enter string");
+        using var readStream = stringToEncrypt.ToGlobalEncodingMemoryStream();
         var algorithmTypeSerialized = BitConverter.GetBytes((int)algorithmType);
-        var writeStream = new MemoryStream(algorithmTypeSerialized);
+        using var writeStream = new MemoryStream(algorithmTypeSerialized, true);
 
         await algorithm.EncryptAsync(readStream, writeStream);
 
